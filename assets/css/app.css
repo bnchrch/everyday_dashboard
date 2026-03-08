@@ -1,0 +1,417 @@
+/* See the Tailwind configuration guide for advanced usage
+   https://tailwindcss.com/docs/configuration */
+
+@import "tailwindcss" source(none);
+@source "../css";
+@source "../js";
+@source "../../lib/everyday_dash_web";
+
+/* A Tailwind plugin that makes "hero-#{ICON}" classes available.
+   The heroicons installation itself is managed by your mix.exs */
+@plugin "../vendor/heroicons";
+
+/* daisyUI Tailwind Plugin. You can update this file by fetching the latest version with:
+   curl -sLO https://github.com/saadeghi/daisyui/releases/latest/download/daisyui.js
+   Make sure to look at the daisyUI changelog: https://daisyui.com/docs/changelog/ */
+@plugin "../vendor/daisyui" {
+  themes: false;
+}
+
+/* daisyUI theme plugin. You can update this file by fetching the latest version with:
+  curl -sLO https://github.com/saadeghi/daisyui/releases/latest/download/daisyui-theme.js
+  We ship with two themes, a light one inspired on Phoenix colors and a dark one inspired
+  on Elixir colors. Build your own at: https://daisyui.com/theme-generator/ */
+@plugin "../vendor/daisyui-theme" {
+  name: "dark";
+  default: false;
+  prefersdark: true;
+  color-scheme: "dark";
+  --color-base-100: oklch(30.33% 0.016 252.42);
+  --color-base-200: oklch(25.26% 0.014 253.1);
+  --color-base-300: oklch(20.15% 0.012 254.09);
+  --color-base-content: oklch(97.807% 0.029 256.847);
+  --color-primary: oklch(58% 0.233 277.117);
+  --color-primary-content: oklch(96% 0.018 272.314);
+  --color-secondary: oklch(58% 0.233 277.117);
+  --color-secondary-content: oklch(96% 0.018 272.314);
+  --color-accent: oklch(60% 0.25 292.717);
+  --color-accent-content: oklch(96% 0.016 293.756);
+  --color-neutral: oklch(37% 0.044 257.287);
+  --color-neutral-content: oklch(98% 0.003 247.858);
+  --color-info: oklch(58% 0.158 241.966);
+  --color-info-content: oklch(97% 0.013 236.62);
+  --color-success: oklch(60% 0.118 184.704);
+  --color-success-content: oklch(98% 0.014 180.72);
+  --color-warning: oklch(66% 0.179 58.318);
+  --color-warning-content: oklch(98% 0.022 95.277);
+  --color-error: oklch(58% 0.253 17.585);
+  --color-error-content: oklch(96% 0.015 12.422);
+  --radius-selector: 0.25rem;
+  --radius-field: 0.25rem;
+  --radius-box: 0.5rem;
+  --size-selector: 0.21875rem;
+  --size-field: 0.21875rem;
+  --border: 1.5px;
+  --depth: 1;
+  --noise: 0;
+}
+
+@plugin "../vendor/daisyui-theme" {
+  name: "light";
+  default: true;
+  prefersdark: false;
+  color-scheme: "light";
+  --color-base-100: oklch(98% 0 0);
+  --color-base-200: oklch(96% 0.001 286.375);
+  --color-base-300: oklch(92% 0.004 286.32);
+  --color-base-content: oklch(21% 0.006 285.885);
+  --color-primary: oklch(70% 0.213 47.604);
+  --color-primary-content: oklch(98% 0.016 73.684);
+  --color-secondary: oklch(55% 0.027 264.364);
+  --color-secondary-content: oklch(98% 0.002 247.839);
+  --color-accent: oklch(0% 0 0);
+  --color-accent-content: oklch(100% 0 0);
+  --color-neutral: oklch(44% 0.017 285.786);
+  --color-neutral-content: oklch(98% 0 0);
+  --color-info: oklch(62% 0.214 259.815);
+  --color-info-content: oklch(97% 0.014 254.604);
+  --color-success: oklch(70% 0.14 182.503);
+  --color-success-content: oklch(98% 0.014 180.72);
+  --color-warning: oklch(66% 0.179 58.318);
+  --color-warning-content: oklch(98% 0.022 95.277);
+  --color-error: oklch(58% 0.253 17.585);
+  --color-error-content: oklch(96% 0.015 12.422);
+  --radius-selector: 0.25rem;
+  --radius-field: 0.25rem;
+  --radius-box: 0.5rem;
+  --size-selector: 0.21875rem;
+  --size-field: 0.21875rem;
+  --border: 1.5px;
+  --depth: 1;
+  --noise: 0;
+}
+
+/* Add variants based on LiveView classes */
+@custom-variant phx-click-loading (.phx-click-loading&, .phx-click-loading &);
+@custom-variant phx-submit-loading (.phx-submit-loading&, .phx-submit-loading &);
+@custom-variant phx-change-loading (.phx-change-loading&, .phx-change-loading &);
+
+/* Use the data attribute for dark mode  */
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+/* Make LiveView wrapper divs transparent for layout */
+[data-phx-session], [data-phx-teleported-src] { display: contents }
+
+/* This file is for your main application CSS */
+
+:root {
+  --dashboard-bg: #efe7d8;
+  --dashboard-ink: #152118;
+  --dashboard-muted: rgba(21, 33, 24, 0.68);
+  --dashboard-border: rgba(21, 33, 24, 0.1);
+  --dashboard-panel-border: rgba(255, 255, 255, 0.08);
+  --dashboard-shadow: 0 35px 100px rgba(49, 36, 17, 0.18);
+}
+
+html {
+  background-color: var(--dashboard-bg);
+}
+
+body {
+  color: var(--dashboard-ink);
+  font-family: "Avenir Next", "Segoe UI", sans-serif;
+  background:
+    radial-gradient(circle at 9% 12%, rgba(255, 166, 91, 0.22), transparent 25rem),
+    radial-gradient(circle at 86% 16%, rgba(97, 192, 151, 0.24), transparent 22rem),
+    linear-gradient(180deg, #f8f2e7 0%, #e9dcc4 100%);
+}
+
+.dashboard-stage {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.dashboard-orb {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(20px);
+  opacity: 0.75;
+  animation: dashboard-drift 16s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.dashboard-orb--warm {
+  top: -6rem;
+  left: -8rem;
+  width: 22rem;
+  height: 22rem;
+  background: radial-gradient(circle, rgba(255, 151, 77, 0.72), rgba(255, 151, 77, 0));
+}
+
+.dashboard-orb--cool {
+  right: -4rem;
+  bottom: -8rem;
+  width: 18rem;
+  height: 18rem;
+  background: radial-gradient(circle, rgba(73, 186, 131, 0.58), rgba(73, 186, 131, 0));
+  animation-delay: -6s;
+}
+
+.dashboard-shell {
+  position: relative;
+  padding: clamp(1.4rem, 3.5vw, 2.5rem);
+  border: 1px solid var(--dashboard-border);
+  border-radius: 2rem;
+  background: rgba(255, 251, 244, 0.5);
+  backdrop-filter: blur(22px);
+  box-shadow: var(--dashboard-shadow);
+}
+
+.dashboard-shell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0));
+  pointer-events: none;
+}
+
+.dashboard-kicker {
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: #6b6f60;
+}
+
+.dashboard-title {
+  font-family: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  font-weight: 600;
+  color: #172319;
+}
+
+.dashboard-refresh-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 9999px;
+  padding: 0.85rem 1.2rem;
+  background: #152118;
+  color: #fbf7ef;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  box-shadow: 0 14px 28px rgba(21, 33, 24, 0.16);
+  transition:
+    transform 140ms ease,
+    background-color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.dashboard-refresh-button:hover {
+  background: #0f1812;
+  transform: translateY(-1px);
+  box-shadow: 0 18px 34px rgba(21, 33, 24, 0.2);
+}
+
+.dashboard-refresh-button:focus-visible {
+  outline: 2px solid rgba(21, 33, 24, 0.35);
+  outline-offset: 3px;
+}
+
+.metric-card {
+  --metric-rgb: 245, 120, 64;
+  position: relative;
+  overflow: hidden;
+  min-height: 34rem;
+  padding: 1.5rem;
+  border-radius: 1.9rem;
+  border: 1px solid var(--dashboard-panel-border);
+  background:
+    linear-gradient(170deg, rgba(14, 18, 16, 0.96), rgba(28, 39, 35, 0.92)),
+    rgba(14, 18, 16, 0.96);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 30px 80px rgba(23, 22, 18, 0.24);
+  animation: metric-card-rise 620ms cubic-bezier(0.18, 0.8, 0.28, 1) both;
+}
+
+.metric-card:nth-child(2) {
+  animation-delay: 120ms;
+}
+
+.metric-card--pine {
+  --metric-rgb: 73, 186, 131;
+}
+
+.metric-card__wash {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at top left, rgba(var(--metric-rgb), 0.22), transparent 36%),
+    radial-gradient(circle at bottom right, rgba(255, 255, 255, 0.06), transparent 32%);
+  pointer-events: none;
+}
+
+.metric-card__label {
+  font-size: 0.73rem;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.56);
+}
+
+.metric-card__headline {
+  font-family: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
+  line-height: 1;
+  color: #fff6ea;
+}
+
+.metric-card__badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9999px;
+  padding: 0.42rem 0.72rem;
+  font-size: 0.75rem;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  backdrop-filter: blur(8px);
+}
+
+.metric-card__badge--ok {
+  background: rgba(73, 186, 131, 0.16);
+  color: #95f1c0;
+  border: 1px solid rgba(73, 186, 131, 0.2);
+}
+
+.metric-card__badge--stale,
+.metric-card__badge--loading,
+.metric-card__badge--setup,
+.metric-card__badge--error {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.metric-card__chart {
+  position: relative;
+  min-height: 18rem;
+  padding: 1.5rem 0 0.75rem;
+}
+
+.metric-card__chart-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.metric-card__grid {
+  stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 0.8;
+  stroke-dasharray: 1.8 3.2;
+}
+
+.metric-card__area {
+  fill: rgba(var(--metric-rgb), 0.17);
+}
+
+.metric-card__line {
+  fill: none;
+  stroke: rgba(var(--metric-rgb), 1);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 16px rgba(var(--metric-rgb), 0.35));
+}
+
+.metric-card__subhead {
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.54);
+}
+
+.metric-card__value {
+  font-family: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  font-size: clamp(3rem, 8vw, 4.8rem);
+  line-height: 0.92;
+  color: #fff8ee;
+}
+
+.metric-card__unit {
+  margin-top: 0.6rem;
+  font-size: 0.96rem;
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.metric-card__stat {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-radius: 1.3rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.95rem 1rem;
+}
+
+.metric-card__stat-label {
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.metric-card__stat-value {
+  font-family: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  font-size: 1.45rem;
+  font-weight: 600;
+  color: #fff6ea;
+}
+
+.metric-card__env {
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.08);
+  padding: 0.34rem 0.6rem;
+  color: #fff8ee;
+}
+
+@keyframes dashboard-drift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(1.5rem, -1rem, 0) scale(1.04); }
+}
+
+@keyframes metric-card-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 640px) {
+  .dashboard-shell {
+    padding: 1.2rem;
+    border-radius: 1.5rem;
+  }
+
+  .metric-card {
+    min-height: auto;
+    padding: 1.2rem;
+    border-radius: 1.5rem;
+  }
+
+  .metric-card__chart {
+    min-height: 14rem;
+  }
+}
