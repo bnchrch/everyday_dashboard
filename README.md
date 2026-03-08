@@ -12,7 +12,7 @@ Each card plots the past 30 days as a trailing 7-day average and overlays the cu
 This repo is pinned to the newest `Elixir 1.20` build available through `mise` on this machine right now:
 
 - Erlang `28.4`
-- Elixir `1.20.0-rc.2-otp-28`
+- Elixir `1.20.0-rc.2`
 
 If a stable `1.20.x` release is available later, update [.mise.toml](/Users/ben/Development/repos/everyday_dash/.mise.toml) and [mix.exs](/Users/ben/Development/repos/everyday_dash/mix.exs).
 
