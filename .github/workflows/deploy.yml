@@ -1,0 +1,61 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up BEAM
+        uses: erlef/setup-beam@v1
+        with:
+          otp-version: "28.4"
+          elixir-version: "1.20.0-rc.2"
+
+      - name: Install Hex and Rebar
+        run: |
+          mix local.hex --force
+          mix local.rebar --force
+
+      - name: Fetch dependencies
+        run: mix deps.get
+
+      - name: Run tests
+        run: mix test
+
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: test
+    env:
+      GIGALIXIR_APP_NAME: bnchrch-everyday-dashboard
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Gigalixir git remote
+        env:
+          GIGALIXIR_EMAIL: ${{ secrets.GIGALIXIR_EMAIL }}
+          GIGALIXIR_API_KEY: ${{ secrets.GIGALIXIR_API_KEY }}
+        run: |
+          git remote add gigalixir "https://${GIGALIXIR_EMAIL}:${GIGALIXIR_API_KEY}@git.gigalixir.com/${GIGALIXIR_APP_NAME}.git"
+
+      - name: Deploy to Gigalixir
+        run: git push -f gigalixir HEAD:refs/heads/main

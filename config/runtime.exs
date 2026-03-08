@@ -7,6 +7,14 @@ parse_integer = fn env_var, default ->
   end
 end
 
+parse_csv = fn env_var ->
+  env_var
+  |> System.get_env("")
+  |> String.split(",", trim: true)
+  |> Enum.map(&String.trim/1)
+  |> Enum.reject(&(&1 == ""))
+end
+
 config :everyday_dash, EverydayDash.Dashboard,
   refresh_interval_ms: parse_integer.("DASHBOARD_REFRESH_MS", 60_000),
   graph_days: parse_integer.("DASHBOARD_GRAPH_DAYS", 30),
@@ -85,11 +93,14 @@ if config_env() == :prod do
       """
 
   host = System.get_env("PHX_HOST") || "example.com"
+  additional_hosts = parse_csv.("PHX_ADDITIONAL_HOSTS")
+  allowed_hosts = [host | additional_hosts] |> Enum.uniq()
 
   config :everyday_dash, :dns_cluster_query, System.get_env("DNS_CLUSTER_QUERY")
 
   config :everyday_dash, EverydayDashWeb.Endpoint,
     url: [host: host, port: 443, scheme: "https"],
+    check_origin: Enum.map(allowed_hosts, &"//#{&1}"),
     http: [
       # Enable IPv6 and bind on all interfaces.
       # Set it to  {0, 0, 0, 0, 0, 0, 0, 1} for local network only access.

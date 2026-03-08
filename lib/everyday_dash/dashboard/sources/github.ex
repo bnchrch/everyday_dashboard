@@ -81,7 +81,7 @@ defmodule EverydayDash.Dashboard.Sources.GitHub do
         {:ok,
          %{
            counts: counts,
-           source_label: "@#{username}",
+           source_label: "Work",
            status_message: status_message
          }}
 

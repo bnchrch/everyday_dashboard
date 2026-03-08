@@ -243,7 +243,7 @@ defmodule EverydayDash.Dashboard.Sources.Strava do
 
     %{
       counts: counts,
-      source_label: "OAuth refresh",
+      source_label: "Play",
       status_message: "Live data"
     }
   end

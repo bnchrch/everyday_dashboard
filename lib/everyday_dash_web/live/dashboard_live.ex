@@ -4,14 +4,30 @@ defmodule EverydayDashWeb.DashboardLive do
   alias EverydayDash.Dashboard
   alias EverydayDashWeb.DashboardComponents
 
+  @hero_messages [
+    "You are the base",
+    "Roadwork makes the brain work",
+    "Want to achieve your dreams? sleep.",
+    "Systems not goals",
+    "Delegate dont do",
+    "Are you hunting antelope? or field mice?",
+    "Dont spend your dreams",
+    "Consistency compounds",
+    "How cheap is your happiness?",
+    "Life short, have fun"
+  ]
+
   @impl true
   def mount(_params, _session, socket) do
     if connected?(socket), do: Dashboard.subscribe()
+
+    if connected?(socket), do: schedule_hero_message_refresh()
 
     {:ok,
      socket
      |> assign(:page_title, "Everyday Dash")
      |> assign(:snapshot, Dashboard.snapshot())
+     |> assign(:hero_message, current_hero_message())
      |> assign(:refresh_requested?, false)}
   end
 
@@ -24,6 +40,12 @@ defmodule EverydayDashWeb.DashboardLive do
   @impl true
   def handle_info({:dashboard_snapshot, snapshot}, socket) do
     {:noreply, assign(socket, snapshot: snapshot, refresh_requested?: false)}
+  end
+
+  @impl true
+  def handle_info(:refresh_hero_message, socket) do
+    schedule_hero_message_refresh()
+    {:noreply, assign(socket, :hero_message, current_hero_message())}
   end
 
   @impl true
@@ -43,7 +65,7 @@ defmodule EverydayDashWeb.DashboardLive do
                   One page for the signals that matter every day.
                 </h1>
                 <p class="max-w-2xl text-base leading-7 text-[color:var(--dashboard-muted)] sm:text-lg">
-                  Each card tracks the past month and plots the trailing 7-day average, so the center number stays readable while the trend still moves.
+                  {@hero_message}
                 </p>
               </div>
 
@@ -102,5 +124,24 @@ defmodule EverydayDashWeb.DashboardLive do
       seconds < 3_600 -> "#{div(seconds, 60)} minutes ago"
       true -> "#{div(seconds, 3_600)} hours ago"
     end
+  end
+
+  defp current_hero_message do
+    now = NaiveDateTime.local_now()
+    minute_of_day = now.hour * 60 + now.minute
+
+    Enum.at(@hero_messages, rem(minute_of_day, length(@hero_messages)))
+  end
+
+  defp schedule_hero_message_refresh do
+    Process.send_after(self(), :refresh_hero_message, milliseconds_until_next_minute())
+  end
+
+  defp milliseconds_until_next_minute do
+    now = NaiveDateTime.local_now()
+    microseconds = elem(now.microsecond, 0)
+    elapsed_ms = now.second * 1_000 + div(microseconds, 1_000)
+
+    max(60_000 - elapsed_ms, 1)
   end
 end
