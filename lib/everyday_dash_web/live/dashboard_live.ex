@@ -65,7 +65,7 @@ defmodule EverydayDashWeb.DashboardLive do
                   One page for the signals that matter every day.
                 </h1>
                 <p class="max-w-2xl text-base leading-7 text-[color:var(--dashboard-muted)] sm:text-lg">
-                  {@hero_message}
+                  {hero_message_copy(@hero_message)}
                 </p>
               </div>
 
@@ -132,6 +132,8 @@ defmodule EverydayDashWeb.DashboardLive do
 
     Enum.at(@hero_messages, rem(minute_of_day, length(@hero_messages)))
   end
+
+  defp hero_message_copy(message), do: "> Remember: #{message}"
 
   defp schedule_hero_message_refresh do
     Process.send_after(self(), :refresh_hero_message, milliseconds_until_next_minute())
