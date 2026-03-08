@@ -133,7 +133,7 @@ defmodule EverydayDashWeb.DashboardLive do
     Enum.at(@hero_messages, rem(minute_of_day, length(@hero_messages)))
   end
 
-  defp hero_message_copy(message), do: "> Remember: #{message}"
+  defp hero_message_copy(message), do: "Remember: #{message}"
 
   defp schedule_hero_message_refresh do
     Process.send_after(self(), :refresh_hero_message, milliseconds_until_next_minute())
