@@ -37,7 +37,6 @@ defmodule EverydayDash.Dashboard.Sources.Strava do
     client_id = Map.get(config, :client_id)
     client_secret = Map.get(config, :client_secret)
     configured_refresh_token = Map.get(config, :refresh_token)
-    token_store_path = Map.get(config, :token_store_path)
 
     cond do
       blank?(client_id) or blank?(client_secret) ->
@@ -45,13 +44,7 @@ defmodule EverydayDash.Dashboard.Sources.Strava do
          "Set STRAVA_CLIENT_ID and STRAVA_CLIENT_SECRET to enable live Strava data."}
 
       true ->
-        load_or_refresh_token(
-          client_id,
-          client_secret,
-          configured_refresh_token,
-          token_store_path,
-          false
-        )
+        load_or_refresh_token(client_id, client_secret, configured_refresh_token, config, false)
     end
   end
 
@@ -59,11 +52,11 @@ defmodule EverydayDash.Dashboard.Sources.Strava do
          client_id,
          client_secret,
          configured_refresh_token,
-         token_store_path,
+         config,
          force_refresh?
        ) do
     stored_token =
-      case StravaTokenStore.load(token_store_path) do
+      case StravaTokenStore.load(config) do
         {:ok, token_state} -> token_state
         :missing -> %{}
         {:error, reason} -> raise "could not read Strava token store: #{inspect(reason)}"
@@ -76,7 +69,7 @@ defmodule EverydayDash.Dashboard.Sources.Strava do
 
     cond do
       refresh_token_changed?(configured_refresh_token, stored_refresh_token) ->
-        refresh_access_token(client_id, client_secret, configured_refresh_token, token_store_path)
+        refresh_access_token(client_id, client_secret, configured_refresh_token, config)
 
       valid_access_token?(stored_token, now) and not force_refresh? ->
         {:ok, stored_token.access_token}
@@ -90,7 +83,7 @@ defmodule EverydayDash.Dashboard.Sources.Strava do
           {:error, :missing_config,
            "Set STRAVA_REFRESH_TOKEN to bootstrap the Strava token refresh flow."}
         else
-          refresh_access_token(client_id, client_secret, refresh_token, token_store_path)
+          refresh_access_token(client_id, client_secret, refresh_token, config)
         end
     end
   end
@@ -103,7 +96,7 @@ defmodule EverydayDash.Dashboard.Sources.Strava do
          client_id,
          client_secret,
          configured_refresh_token,
-         token_store_path
+         config
        ) do
     case fetch_activities(access_token, today, graph_days, window_days) do
       {:ok, activities} ->
@@ -115,7 +108,7 @@ defmodule EverydayDash.Dashboard.Sources.Strava do
                  client_id,
                  client_secret,
                  configured_refresh_token,
-                 token_store_path,
+                 config,
                  true
                ),
              {:ok, activities} <-
@@ -128,7 +121,7 @@ defmodule EverydayDash.Dashboard.Sources.Strava do
     end
   end
 
-  defp refresh_access_token(client_id, client_secret, refresh_token, token_store_path) do
+  defp refresh_access_token(client_id, client_secret, refresh_token, config) do
     request =
       Req.new(
         url: @oauth_endpoint,
@@ -151,7 +144,7 @@ defmodule EverydayDash.Dashboard.Sources.Strava do
           refresh_token: body["refresh_token"]
         }
 
-        case StravaTokenStore.save(token_store_path, token_state) do
+        case StravaTokenStore.save(config, token_state) do
           :ok ->
             {:ok, token_state.access_token}
 

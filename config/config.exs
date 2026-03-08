@@ -8,7 +8,8 @@
 import Config
 
 config :everyday_dash,
-  generators: [timestamp_type: :utc_datetime]
+  generators: [timestamp_type: :utc_datetime],
+  ecto_repos: [EverydayDash.Repo]
 
 # Configure the endpoint
 config :everyday_dash, EverydayDashWeb.Endpoint,

@@ -1,36 +1,20 @@
 defmodule EverydayDash.Dashboard.StravaTokenStore do
   @moduledoc false
 
-  def load(path) do
-    case File.read(path) do
-      {:ok, json} ->
-        with {:ok, decoded} <- Jason.decode(json) do
-          {:ok,
-           %{
-             access_token: Map.get(decoded, "access_token"),
-             expires_at: Map.get(decoded, "expires_at"),
-             refresh_token: Map.get(decoded, "refresh_token")
-           }}
-        end
+  alias EverydayDash.Dashboard.StravaTokenStore.Database
+  alias EverydayDash.Dashboard.StravaTokenStore.File
 
-      {:error, :enoent} ->
-        :missing
-
-      {:error, reason} ->
-        {:error, reason}
+  def load(config) do
+    case Map.get(config, :token_store_backend, :file) do
+      :database -> Database.load()
+      :file -> File.load(Map.fetch!(config, :token_store_path))
     end
   end
 
-  def save(path, token_state) do
-    File.mkdir_p(Path.dirname(path))
-
-    body =
-      Jason.encode!(%{
-        access_token: token_state.access_token,
-        expires_at: token_state.expires_at,
-        refresh_token: token_state.refresh_token
-      })
-
-    File.write(path, body)
+  def save(config, token_state) do
+    case Map.get(config, :token_store_backend, :file) do
+      :database -> Database.save(token_state)
+      :file -> File.save(Map.fetch!(config, :token_store_path), token_state)
+    end
   end
 end

@@ -7,14 +7,18 @@ defmodule EverydayDash.Application do
 
   @impl true
   def start(_type, _args) do
-    children = [
-      EverydayDashWeb.Telemetry,
-      {DNSCluster, query: Application.get_env(:everyday_dash, :dns_cluster_query) || :ignore},
-      {Phoenix.PubSub, name: EverydayDash.PubSub},
-      {Task.Supervisor, name: EverydayDash.TaskSupervisor},
-      EverydayDash.Dashboard.Server,
-      EverydayDashWeb.Endpoint
-    ]
+    children =
+      [
+        EverydayDashWeb.Telemetry,
+        {DNSCluster, query: Application.get_env(:everyday_dash, :dns_cluster_query) || :ignore},
+        {Phoenix.PubSub, name: EverydayDash.PubSub}
+      ] ++
+        repo_children() ++
+        [
+          {Task.Supervisor, name: EverydayDash.TaskSupervisor},
+          EverydayDash.Dashboard.Server,
+          EverydayDashWeb.Endpoint
+        ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
@@ -28,5 +32,13 @@ defmodule EverydayDash.Application do
   def config_change(changed, _new, removed) do
     EverydayDashWeb.Endpoint.config_change(changed, removed)
     :ok
+  end
+
+  defp repo_children do
+    case Application.get_env(:everyday_dash, EverydayDash.Repo) do
+      nil -> []
+      [] -> []
+      _config -> [EverydayDash.Repo]
+    end
   end
 end

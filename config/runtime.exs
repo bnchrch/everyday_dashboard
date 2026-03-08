@@ -19,10 +19,34 @@ config :everyday_dash, EverydayDash.Dashboard,
     client_id: System.get_env("STRAVA_CLIENT_ID"),
     client_secret: System.get_env("STRAVA_CLIENT_SECRET"),
     refresh_token: System.get_env("STRAVA_REFRESH_TOKEN"),
+    token_store_backend:
+      case System.get_env("STRAVA_TOKEN_STORE_BACKEND") do
+        "database" -> :database
+        "file" -> :file
+        _ -> if(System.get_env("DATABASE_URL"), do: :database, else: :file)
+      end,
     token_store_path:
       System.get_env("STRAVA_TOKEN_STORE_PATH") ||
         Path.expand("../tmp/strava_tokens.json", __DIR__)
   }
+
+database_url = System.get_env("DATABASE_URL")
+
+if database_url do
+  ssl? = System.get_env("ECTO_SSL", "true") not in ["false", "0"]
+
+  config :everyday_dash, EverydayDash.Repo,
+    url: database_url,
+    ssl: ssl?,
+    ssl_opts:
+      if(ssl?,
+        do: [verify: :verify_none, cacerts: :public_key.cacerts_get()],
+        else: []
+      ),
+    pool_size: parse_integer.("POOL_SIZE", 2),
+    socket_options:
+      if(System.get_env("ECTO_IPV6", "false") in ["true", "1"], do: [:inet6], else: [])
+end
 
 # config/runtime.exs is executed for all environments, including
 # during releases. It is executed after compilation and before the
