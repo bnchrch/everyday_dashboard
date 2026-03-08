@@ -20,6 +20,10 @@ defmodule EverydayDash.Dashboard do
     GenServer.cast(Server, :refresh_now)
   end
 
+  def today do
+    NaiveDateTime.local_now() |> NaiveDateTime.to_date()
+  end
+
   def broadcast(snapshot) do
     Phoenix.PubSub.broadcast(EverydayDash.PubSub, @topic, {:dashboard_snapshot, snapshot})
   end

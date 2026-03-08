@@ -32,7 +32,7 @@ defmodule EverydayDash.Dashboard.Loader do
   ]
 
   def initial_snapshot do
-    today = Date.utc_today()
+    today = Dashboard.today()
     now = now()
 
     %{
@@ -45,7 +45,7 @@ defmodule EverydayDash.Dashboard.Loader do
   end
 
   def fetch(previous_snapshot \\ nil) do
-    today = Date.utc_today()
+    today = Dashboard.today()
     now = now()
     previous_metrics = previous_metric_map(previous_snapshot)
 
