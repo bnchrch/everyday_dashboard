@@ -31,11 +31,15 @@ defmodule EverydayDashWeb.Layouts do
     default: nil,
     doc: "the current [scope](https://hexdocs.pm/phoenix/scopes.html)"
 
+  attr :show_header, :boolean, default: true, doc: "whether to render the default header"
+  attr :main_class, :string, default: "px-4 py-20 sm:px-6 lg:px-8", doc: "main element classes"
+  attr :inner_class, :string, default: "mx-auto max-w-2xl space-y-4", doc: "inner wrapper classes"
+
   slot :inner_block, required: true
 
   def app(assigns) do
     ~H"""
-    <header class="navbar px-4 sm:px-6 lg:px-8">
+    <header :if={@show_header} class="navbar px-4 sm:px-6 lg:px-8">
       <div class="flex-1">
         <a href="/" class="flex-1 flex w-fit items-center gap-2">
           <img src={~p"/images/logo.svg"} width="36" />
@@ -62,8 +66,8 @@ defmodule EverydayDashWeb.Layouts do
       </div>
     </header>
 
-    <main class="px-4 py-20 sm:px-6 lg:px-8">
-      <div class="mx-auto max-w-2xl space-y-4">
+    <main class={@main_class}>
+      <div class={@inner_class}>
         {render_slot(@inner_block)}
       </div>
     </main>

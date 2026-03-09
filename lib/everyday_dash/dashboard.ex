@@ -48,6 +48,10 @@ defmodule EverydayDash.Dashboard do
     Keyword.get(config(), :github, %{})
   end
 
+  def habitify_config do
+    Keyword.get(config(), :habitify, %{})
+  end
+
   def strava_config do
     Keyword.get(config(), :strava, %{})
   end

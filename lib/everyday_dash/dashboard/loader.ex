@@ -2,6 +2,7 @@ defmodule EverydayDash.Dashboard.Loader do
   @moduledoc false
 
   alias EverydayDash.Dashboard
+  alias EverydayDash.Dashboard.Sources.Habitify
   alias EverydayDash.Dashboard.Series
   alias EverydayDash.Dashboard.Sources.GitHub
   alias EverydayDash.Dashboard.Sources.Strava
@@ -40,7 +41,8 @@ defmodule EverydayDash.Dashboard.Loader do
       updated_at: nil,
       refreshing?: true,
       range_label: range_label(today),
-      metrics: Enum.map(@metric_specs, &initial_metric(&1, today))
+      metrics: Enum.map(@metric_specs, &initial_metric(&1, today)),
+      habitify: initial_habitify()
     }
   end
 
@@ -48,6 +50,7 @@ defmodule EverydayDash.Dashboard.Loader do
     today = Dashboard.today()
     now = now()
     previous_metrics = previous_metric_map(previous_snapshot)
+    previous_habitify = previous_habitify(previous_snapshot)
 
     metrics =
       Enum.map(@metric_specs, fn spec ->
@@ -59,7 +62,8 @@ defmodule EverydayDash.Dashboard.Loader do
       updated_at: now,
       refreshing?: false,
       range_label: range_label(today),
-      metrics: metrics
+      metrics: metrics,
+      habitify: load_habitify(today, previous_habitify)
     }
   end
 
@@ -79,7 +83,12 @@ defmodule EverydayDash.Dashboard.Loader do
         end
       end)
 
-    %{snapshot | refreshing?: false, metrics: metrics}
+    %{
+      snapshot
+      | refreshing?: false,
+        metrics: metrics,
+        habitify: mark_habitify_failed(snapshot, message)
+    }
   end
 
   defp load_metric(spec, today, previous_metric) do
@@ -166,8 +175,70 @@ defmodule EverydayDash.Dashboard.Loader do
     build_state_metric(spec, today, :loading, "Pulling the first snapshot.")
   end
 
+  defp initial_habitify do
+    build_state_habitify(:loading, "Pulling the first snapshot.")
+  end
+
+  defp load_habitify(today, previous_habitify) do
+    case Habitify.fetch(today, Dashboard.graph_days()) do
+      {:ok, %{cards: cards} = payload} ->
+        %{
+          cards: cards,
+          status: :ok,
+          status_message: Map.get(payload, :status_message, "Live data"),
+          updated_at: now()
+        }
+
+      {:error, :missing_config, message} ->
+        fallback_habitify(previous_habitify, :setup_required, message)
+
+      {:error, _reason, message} ->
+        fallback_habitify(previous_habitify, :error, message)
+    end
+  rescue
+    error ->
+      fallback_habitify(previous_habitify, :error, Exception.message(error))
+  end
+
+  defp fallback_habitify(previous_habitify, status, message) do
+    if cached_habitify_cards?(previous_habitify) do
+      %{previous_habitify | status: :stale, status_message: "Using cached data. #{message}"}
+    else
+      build_state_habitify(status, message)
+    end
+  end
+
+  defp build_state_habitify(status, message) do
+    %{
+      cards: [],
+      status: status,
+      status_message: message,
+      updated_at: nil
+    }
+  end
+
+  defp mark_habitify_failed(snapshot, message) do
+    habitify = Map.get(snapshot, :habitify)
+
+    cond do
+      cached_habitify_cards?(habitify) ->
+        %{habitify | status: :stale, status_message: message}
+
+      is_map(habitify) ->
+        %{habitify | status: :error, status_message: message}
+
+      true ->
+        build_state_habitify(:error, message)
+    end
+  end
+
+  defp cached_habitify_cards?(%{cards: cards}) when is_list(cards), do: cards != []
+  defp cached_habitify_cards?(_habitify), do: false
+
   defp previous_metric_map(nil), do: %{}
   defp previous_metric_map(%{metrics: metrics}), do: Map.new(metrics, &{&1.id, &1})
+  defp previous_habitify(nil), do: nil
+  defp previous_habitify(%{habitify: habitify}), do: habitify
 
   defp range_label(today) do
     dates = Series.display_dates(Dashboard.graph_days(), today)

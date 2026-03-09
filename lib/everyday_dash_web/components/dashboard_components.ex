@@ -8,7 +8,7 @@ defmodule EverydayDashWeb.DashboardComponents do
 
   def metric_card(assigns) do
     ~H"""
-    <article class={metric_card_class(@metric)}>
+    <article id={"metric-card-#{@metric.id}"} class={metric_card_class(@metric)}>
       <div class="metric-card__wash"></div>
       <div class="relative flex h-full flex-col gap-6">
         <div class="flex items-start justify-between gap-5">
@@ -95,6 +95,101 @@ defmodule EverydayDashWeb.DashboardComponents do
     ]
   end
 
+  attr :habitify, :map, required: true
+  attr :range_label, :string, required: true
+
+  def habitify_section(assigns) do
+    ~H"""
+    <section id="habitify-section" class="mx-auto flex w-full max-w-[78rem] flex-col gap-5">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div class="space-y-2">
+          <p class="dashboard-kicker">Habitify, pulled live</p>
+          <h2 class="habitify-section__title">Small graphs for the habits that shape the day.</h2>
+        </div>
+
+        <div class="text-sm leading-6 text-[color:var(--dashboard-muted)] sm:text-right">
+          <p>{habitify_status_copy(@habitify)}</p>
+          <p>{@range_label}</p>
+        </div>
+      </div>
+
+      <div
+        :if={@habitify.cards == []}
+        id="habitify-empty-state"
+        class="habitify-empty-state"
+      >
+        <div class="space-y-2">
+          <p class="habitify-empty-state__eyebrow">{habitify_empty_eyebrow(@habitify)}</p>
+          <h3 class="habitify-empty-state__title">{habitify_empty_title(@habitify)}</h3>
+          <p class="text-sm leading-6 text-white/74">{@habitify.status_message}</p>
+        </div>
+
+        <div
+          :if={@habitify.status in [:setup_required, :error]}
+          class="mt-4 flex flex-wrap gap-2"
+        >
+          <code class="metric-card__env">HABITIFY_API_KEY</code>
+        </div>
+      </div>
+
+      <div
+        :if={@habitify.cards != []}
+        id="habitify-grid"
+        class="grid gap-5 lg:grid-cols-3"
+      >
+        <.habit_card :for={card <- @habitify.cards} card={card} />
+      </div>
+    </section>
+    """
+  end
+
+  attr :card, :map, required: true
+
+  defp habit_card(assigns) do
+    ~H"""
+    <article id={"habit-card-#{@card.id}"} class="habit-card">
+      <div class="habit-card__wash"></div>
+      <div class="relative flex h-full flex-col gap-5">
+        <div class="flex items-start justify-between gap-4">
+          <div class="space-y-2">
+            <p class="habit-card__eyebrow">Habit</p>
+            <h3 class="habit-card__title">{@card.name}</h3>
+            <p class="habit-card__goal">{@card.goal_label}</p>
+          </div>
+
+          <span class={habit_badge_class(@card.today_status)}>
+            {habit_badge_label(@card.today_status)}
+          </span>
+        </div>
+
+        <div class="habit-card__chart">
+          <div class="habit-card__bars" aria-hidden="true">
+            <span
+              :for={{value, index} <- Enum.with_index(@card.series)}
+              class={habit_bar_class(value)}
+              title={"Day #{index + 1}: #{habit_bar_title(value)}"}
+            />
+          </div>
+        </div>
+
+        <div class="grid gap-3 sm:grid-cols-2">
+          <div class="habit-card__stat">
+            <span class="habit-card__stat-label">30d done</span>
+            <strong class="habit-card__stat-value">
+              {@card.completed_days}/{@card.total_days}
+            </strong>
+          </div>
+
+          <div class="habit-card__stat">
+            <span class="habit-card__stat-label">Today</span>
+            <strong class="habit-card__stat-copy">{habit_today_copy(@card.today_status)}</strong>
+          </div>
+        </div>
+      </div>
+    </article>
+    """
+  end
+
   defp status_badge_class(:ok), do: "metric-card__badge metric-card__badge--ok"
   defp status_badge_class(:stale), do: "metric-card__badge metric-card__badge--stale"
   defp status_badge_class(:loading), do: "metric-card__badge metric-card__badge--loading"
@@ -133,6 +228,45 @@ defmodule EverydayDashWeb.DashboardComponents do
   defp value_unit(%{status: :loading}), do: "first snapshot"
   defp value_unit(%{status: :setup_required}), do: "add tokens below"
   defp value_unit(%{status: :error}), do: "automatic retry active"
+
+  defp habitify_status_copy(%{status: :ok}), do: "Live from Habitify."
+  defp habitify_status_copy(%{status: :stale, status_message: message}), do: message
+  defp habitify_status_copy(%{status: :loading, status_message: message}), do: message
+  defp habitify_status_copy(%{status: :setup_required, status_message: message}), do: message
+  defp habitify_status_copy(%{status: :error, status_message: message}), do: message
+
+  defp habitify_empty_eyebrow(%{status: :loading}), do: "Syncing"
+  defp habitify_empty_eyebrow(%{status: :setup_required}), do: "Setup required"
+  defp habitify_empty_eyebrow(%{status: :error}), do: "Retry pending"
+  defp habitify_empty_eyebrow(%{status: :stale}), do: "Using cache"
+  defp habitify_empty_eyebrow(%{status: :ok}), do: "Nothing live yet"
+
+  defp habitify_empty_title(%{status: :ok}), do: "No active Habitify habits found."
+  defp habitify_empty_title(%{status: :loading}), do: "Pulling Habitify habits."
+
+  defp habitify_empty_title(%{status: :setup_required}),
+    do: "Connect Habitify to render mini-graphs."
+
+  defp habitify_empty_title(%{status: :error}), do: "Habitify is temporarily unavailable."
+  defp habitify_empty_title(%{status: :stale}), do: "Cached Habitify cards are not available."
+
+  defp habit_badge_class("completed"), do: "habit-card__badge habit-card__badge--done"
+  defp habit_badge_class("in_progress"), do: "habit-card__badge habit-card__badge--progress"
+  defp habit_badge_class(_status), do: "habit-card__badge habit-card__badge--idle"
+
+  defp habit_badge_label("completed"), do: "Done"
+  defp habit_badge_label("in_progress"), do: "Live"
+  defp habit_badge_label(_status), do: "Idle"
+
+  defp habit_bar_class(1), do: "habit-card__bar habit-card__bar--done"
+  defp habit_bar_class(_value), do: "habit-card__bar habit-card__bar--miss"
+
+  defp habit_bar_title(1), do: "done"
+  defp habit_bar_title(_value), do: "not done"
+
+  defp habit_today_copy("completed"), do: "Completed"
+  defp habit_today_copy("in_progress"), do: "In progress"
+  defp habit_today_copy(_status), do: "Not done"
 
   defp polyline_points(series) do
     series

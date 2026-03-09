@@ -23,6 +23,9 @@ config :everyday_dash, EverydayDash.Dashboard,
     username: System.get_env("GITHUB_USERNAME"),
     token: System.get_env("GITHUB_TOKEN")
   },
+  habitify: %{
+    api_key: System.get_env("HABITIFY_API_KEY")
+  },
   strava: %{
     client_id: System.get_env("STRAVA_CLIENT_ID"),
     client_secret: System.get_env("STRAVA_CLIENT_SECRET"),

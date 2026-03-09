@@ -36,4 +36,5 @@ npm-debug.log
 /assets/node_modules/
 
 # Local secrets
+.env
 .envrc

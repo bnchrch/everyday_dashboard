@@ -42,11 +42,16 @@ defmodule EverydayDashWeb.DashboardLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="dashboard-stage">
-      <div class="dashboard-orb dashboard-orb--warm"></div>
-      <div class="dashboard-orb dashboard-orb--cool"></div>
+    <Layouts.app
+      flash={@flash}
+      show_header={false}
+      main_class="mx-auto flex min-h-screen w-full max-w-[92rem] items-center px-6 py-8 sm:px-10 lg:px-12 lg:py-14"
+      inner_class="w-full"
+    >
+      <div class="dashboard-stage">
+        <div class="dashboard-orb dashboard-orb--warm"></div>
+        <div class="dashboard-orb dashboard-orb--cool"></div>
 
-      <main class="mx-auto flex min-h-screen w-full max-w-7xl items-center px-6 py-8 sm:px-10 lg:px-12 lg:py-14">
         <section class="dashboard-shell w-full">
           <div class="flex flex-col gap-10">
             <div class="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
@@ -92,6 +97,7 @@ defmodule EverydayDashWeb.DashboardLive do
                 </div>
 
                 <button
+                  id="dashboard-refresh-button"
                   type="button"
                   phx-click="refresh"
                   class="dashboard-refresh-button"
@@ -101,17 +107,24 @@ defmodule EverydayDashWeb.DashboardLive do
               </div>
             </div>
 
-            <div class="grid gap-6 lg:grid-cols-2">
-              <DashboardComponents.metric_card
-                :for={metric <- @snapshot.metrics}
-                metric={metric}
-                range_label={@snapshot.range_label}
-              />
+            <div class="mx-auto w-full max-w-5xl">
+              <div id="dashboard-metrics-grid" class="grid gap-6 lg:grid-cols-2">
+                <DashboardComponents.metric_card
+                  :for={metric <- @snapshot.metrics}
+                  metric={metric}
+                  range_label={@snapshot.range_label}
+                />
+              </div>
             </div>
+
+            <DashboardComponents.habitify_section
+              habitify={@snapshot.habitify}
+              range_label={@snapshot.range_label}
+            />
           </div>
         </section>
-      </main>
-    </div>
+      </div>
+    </Layouts.app>
     """
   end
 

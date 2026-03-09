@@ -446,6 +446,168 @@ body {
   color: #fff8ee;
 }
 
+.habitify-section__title {
+  font-family: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  font-size: clamp(1.8rem, 3vw, 2.4rem);
+  line-height: 1.05;
+  color: #172319;
+}
+
+.habitify-empty-state,
+.habit-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.65rem;
+  border: 1px solid var(--dashboard-panel-border);
+  background:
+    linear-gradient(165deg, rgba(14, 18, 16, 0.96), rgba(28, 39, 35, 0.92)),
+    rgba(14, 18, 16, 0.96);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 24px 64px rgba(23, 22, 18, 0.22);
+}
+
+.habitify-empty-state {
+  padding: 1.4rem;
+  color: #fff8ee;
+}
+
+.habitify-empty-state__eyebrow,
+.habit-card__eyebrow {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.54);
+}
+
+.habitify-empty-state__title {
+  font-family: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  font-size: 1.65rem;
+  line-height: 1.05;
+  color: #fff8ee;
+}
+
+.habit-card {
+  min-height: 18.5rem;
+  padding: 1.25rem;
+  animation: metric-card-rise 620ms cubic-bezier(0.18, 0.8, 0.28, 1) both;
+}
+
+.habit-card__wash {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at top left, rgba(73, 186, 131, 0.18), transparent 34%),
+    radial-gradient(circle at bottom right, rgba(255, 255, 255, 0.05), transparent 32%);
+  pointer-events: none;
+}
+
+.habit-card__title {
+  font-family: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  font-size: clamp(1.4rem, 3vw, 1.9rem);
+  line-height: 1;
+  color: #fff8ee;
+}
+
+.habit-card__goal {
+  font-size: 0.92rem;
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.habit-card__badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9999px;
+  padding: 0.38rem 0.66rem;
+  font-size: 0.73rem;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  backdrop-filter: blur(8px);
+}
+
+.habit-card__badge--done {
+  border: 1px solid rgba(73, 186, 131, 0.22);
+  background: rgba(73, 186, 131, 0.16);
+  color: #95f1c0;
+}
+
+.habit-card__badge--progress,
+.habit-card__badge--idle {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.74);
+}
+
+.habit-card__chart {
+  padding: 0.45rem 0;
+}
+
+.habit-card__bars {
+  display: grid;
+  grid-template-columns: repeat(30, minmax(0, 1fr));
+  align-items: end;
+  gap: 0.28rem;
+  height: 4.75rem;
+}
+
+.habit-card__bar {
+  border-radius: 9999px;
+  min-height: 0.78rem;
+  transition:
+    transform 140ms ease,
+    opacity 140ms ease,
+    background-color 140ms ease;
+}
+
+.habit-card__bar--done {
+  height: 100%;
+  background: linear-gradient(180deg, rgba(149, 241, 192, 1), rgba(73, 186, 131, 0.62));
+  box-shadow: 0 0 18px rgba(73, 186, 131, 0.24);
+}
+
+.habit-card__bar--miss {
+  height: 26%;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.habit-card:hover .habit-card__bar--done {
+  transform: translateY(-1px);
+}
+
+.habit-card__stat {
+  display: flex;
+  min-height: 4.2rem;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.35rem;
+  border-radius: 1.2rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.85rem 0.95rem;
+}
+
+.habit-card__stat-label {
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.56);
+}
+
+.habit-card__stat-value {
+  font-family: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  font-size: 1.9rem;
+  line-height: 1;
+  color: #fff8ee;
+}
+
+.habit-card__stat-copy {
+  font-size: 1rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.86);
+}
+
 @keyframes dashboard-drift {
   0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
   50% { transform: translate3d(1.5rem, -1rem, 0) scale(1.04); }
@@ -481,7 +643,21 @@ body {
     border-radius: 1.5rem;
   }
 
+  .habitify-empty-state,
+  .habit-card {
+    border-radius: 1.4rem;
+  }
+
+  .habit-card {
+    min-height: auto;
+    padding: 1.1rem;
+  }
+
   .metric-card__chart {
     min-height: 14rem;
+  }
+
+  .habit-card__bars {
+    gap: 0.2rem;
   }
 }
