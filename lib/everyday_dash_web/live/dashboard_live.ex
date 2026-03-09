@@ -62,23 +62,26 @@ defmodule EverydayDashWeb.DashboardLive do
                   data-messages={hero_messages_json()}
                   class="dashboard-hero-copy max-w-2xl text-base leading-7 text-[color:var(--dashboard-muted)] sm:text-lg"
                 >
-                  <div class="dashboard-hero-copy__viewport" aria-live="polite">
-                    <p class="dashboard-hero-copy__sizer" aria-hidden="true">
-                      {hero_message_copy(longest_hero_message())}
-                    </p>
-                    <p
-                      class="dashboard-hero-copy__text dashboard-hero-copy__text--current"
-                      data-role="current"
-                    >
-                      {hero_message_copy(first_hero_message())}
-                    </p>
-                    <p
-                      class="dashboard-hero-copy__text dashboard-hero-copy__text--incoming"
-                      data-role="incoming"
-                      aria-hidden="true"
-                    >
-                    </p>
-                  </div>
+                  <p class="dashboard-hero-copy__line">
+                    <span class="dashboard-hero-copy__label">Remember:</span>
+                    <span class="dashboard-hero-copy__viewport" aria-live="polite">
+                      <span class="dashboard-hero-copy__sizer" aria-hidden="true">
+                        {longest_hero_message()}
+                      </span>
+                      <span
+                        class="dashboard-hero-copy__text dashboard-hero-copy__text--current"
+                        data-role="current"
+                      >
+                        {first_hero_message()}
+                      </span>
+                      <span
+                        class="dashboard-hero-copy__text dashboard-hero-copy__text--incoming"
+                        data-role="incoming"
+                        aria-hidden="true"
+                      >
+                      </span>
+                    </span>
+                  </p>
                 </div>
               </div>
 
@@ -139,12 +142,8 @@ defmodule EverydayDashWeb.DashboardLive do
     end
   end
 
-  defp hero_message_copy(message), do: "Remember: #{message}"
-
   defp hero_messages_json do
-    @hero_messages
-    |> Enum.map(&hero_message_copy/1)
-    |> Jason.encode!()
+    Jason.encode!(@hero_messages)
   end
 
   defp first_hero_message, do: List.first(@hero_messages)

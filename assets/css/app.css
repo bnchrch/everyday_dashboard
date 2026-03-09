@@ -197,12 +197,27 @@ body {
   position: relative;
 }
 
+.dashboard-hero-copy__line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.35rem;
+  margin: 0;
+}
+
+.dashboard-hero-copy__label {
+  flex: 0 0 auto;
+}
+
 .dashboard-hero-copy__viewport {
   position: relative;
   overflow: hidden;
+  flex: 1 1 20rem;
+  min-width: min(20rem, 100%);
 }
 
 .dashboard-hero-copy__sizer {
+  display: block;
   visibility: hidden;
   pointer-events: none;
 }
@@ -215,6 +230,7 @@ body {
 .dashboard-hero-copy__text {
   position: absolute;
   inset: 0;
+  display: block;
   transition:
     transform 400ms ease,
     opacity 400ms ease;
