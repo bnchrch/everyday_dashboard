@@ -193,6 +193,54 @@ body {
   color: #172319;
 }
 
+.dashboard-hero-copy {
+  position: relative;
+}
+
+.dashboard-hero-copy__viewport {
+  position: relative;
+  overflow: hidden;
+}
+
+.dashboard-hero-copy__sizer {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.dashboard-hero-copy__sizer,
+.dashboard-hero-copy__text {
+  margin: 0;
+}
+
+.dashboard-hero-copy__text {
+  position: absolute;
+  inset: 0;
+  transition:
+    transform 400ms ease,
+    opacity 400ms ease;
+  will-change: transform, opacity;
+}
+
+.dashboard-hero-copy__text--current {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.dashboard-hero-copy__text--incoming {
+  opacity: 0;
+  transform: translateY(100%);
+}
+
+.dashboard-hero-copy.is-animating .dashboard-hero-copy__text--current {
+  opacity: 0;
+  transform: translateY(-100%);
+}
+
+.dashboard-hero-copy.is-animating .dashboard-hero-copy__text--incoming {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .dashboard-refresh-button {
   display: inline-flex;
   align-items: center;
@@ -396,6 +444,12 @@ body {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-hero-copy__text {
+    transition: none;
   }
 }
 

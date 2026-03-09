@@ -10,5 +10,9 @@ defmodule EverydayDashWeb.DashboardLiveTest do
     assert html =~ "GitHub commits"
     assert html =~ "Strava activities"
     assert html =~ "Life metrics, refreshed from the source"
+    assert html =~ ~s(phx-hook="HeroMessageRotator")
+    assert html =~ ~s(phx-update="ignore")
+    assert html =~ "Remember: You are the base"
+    assert html =~ ~s(data-messages="[&quot;Remember: You are the base&quot;)
   end
 end

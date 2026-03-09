@@ -25,11 +25,83 @@ import {LiveSocket} from "phoenix_live_view"
 import {hooks as colocatedHooks} from "phoenix-colocated/everyday_dash"
 import topbar from "../vendor/topbar"
 
+const HeroMessageRotator = {
+  mounted() {
+    this.messages = this.parseMessages()
+    this.currentIndex = 0
+    this.currentEl = this.el.querySelector("[data-role='current']")
+    this.incomingEl = this.el.querySelector("[data-role='incoming']")
+    this.intervalId = null
+    this.transitionId = null
+    this.animationFrameId = null
+    this.animationDurationMs = 400
+
+    if (!this.currentEl || !this.incomingEl || this.messages.length === 0) return
+
+    this.currentEl.textContent = this.messages[this.currentIndex]
+    this.resetIncoming()
+
+    if (this.messages.length > 1) {
+      this.intervalId = window.setInterval(() => this.advance(), 10_000)
+    }
+  },
+
+  destroyed() {
+    window.clearInterval(this.intervalId)
+    window.clearTimeout(this.transitionId)
+    window.cancelAnimationFrame(this.animationFrameId)
+  },
+
+  parseMessages() {
+    try {
+      const messages = JSON.parse(this.el.dataset.messages || "[]")
+      return Array.isArray(messages) ? messages : []
+    } catch {
+      return []
+    }
+  },
+
+  advance() {
+    if (this.el.classList.contains("is-animating") || this.messages.length < 2) return
+
+    const nextIndex = (this.currentIndex + 1) % this.messages.length
+    const nextMessage = this.messages[nextIndex]
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      this.currentEl.textContent = nextMessage
+      this.currentIndex = nextIndex
+      return
+    }
+
+    this.incomingEl.textContent = nextMessage
+    this.el.classList.remove("is-resting")
+
+    this.animationFrameId = window.requestAnimationFrame(() => {
+      this.el.classList.add("is-animating")
+    })
+
+    this.transitionId = window.setTimeout(() => {
+      this.currentEl.textContent = nextMessage
+      this.currentIndex = nextIndex
+      this.el.classList.remove("is-animating")
+      this.el.classList.add("is-resting")
+      this.resetIncoming()
+    }, this.animationDurationMs)
+  },
+
+  resetIncoming() {
+    this.incomingEl.textContent = ""
+  },
+}
+
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {...colocatedHooks},
+  hooks: {
+    ...colocatedHooks,
+    HeroMessageRotator,
+  },
 })
 
 // Show progress bar on live navigation and form submits
@@ -80,4 +152,3 @@ if (process.env.NODE_ENV === "development") {
     window.liveReloader = reloader
   })
 }
-

@@ -21,13 +21,10 @@ defmodule EverydayDashWeb.DashboardLive do
   def mount(_params, _session, socket) do
     if connected?(socket), do: Dashboard.subscribe()
 
-    if connected?(socket), do: schedule_hero_message_refresh()
-
     {:ok,
      socket
      |> assign(:page_title, "Everyday Dash")
      |> assign(:snapshot, Dashboard.snapshot())
-     |> assign(:hero_message, current_hero_message())
      |> assign(:refresh_requested?, false)}
   end
 
@@ -40,12 +37,6 @@ defmodule EverydayDashWeb.DashboardLive do
   @impl true
   def handle_info({:dashboard_snapshot, snapshot}, socket) do
     {:noreply, assign(socket, snapshot: snapshot, refresh_requested?: false)}
-  end
-
-  @impl true
-  def handle_info(:refresh_hero_message, socket) do
-    schedule_hero_message_refresh()
-    {:noreply, assign(socket, :hero_message, current_hero_message())}
   end
 
   @impl true
@@ -64,9 +55,31 @@ defmodule EverydayDashWeb.DashboardLive do
                 <h1 class="dashboard-title text-balance text-5xl leading-none sm:text-6xl">
                   One page for the signals that matter every day.
                 </h1>
-                <p class="max-w-2xl text-base leading-7 text-[color:var(--dashboard-muted)] sm:text-lg">
-                  {hero_message_copy(@hero_message)}
-                </p>
+                <div
+                  id="hero-message-rotator"
+                  phx-hook="HeroMessageRotator"
+                  phx-update="ignore"
+                  data-messages={hero_messages_json()}
+                  class="dashboard-hero-copy max-w-2xl text-base leading-7 text-[color:var(--dashboard-muted)] sm:text-lg"
+                >
+                  <div class="dashboard-hero-copy__viewport" aria-live="polite">
+                    <p class="dashboard-hero-copy__sizer" aria-hidden="true">
+                      {hero_message_copy(longest_hero_message())}
+                    </p>
+                    <p
+                      class="dashboard-hero-copy__text dashboard-hero-copy__text--current"
+                      data-role="current"
+                    >
+                      {hero_message_copy(first_hero_message())}
+                    </p>
+                    <p
+                      class="dashboard-hero-copy__text dashboard-hero-copy__text--incoming"
+                      data-role="incoming"
+                      aria-hidden="true"
+                    >
+                    </p>
+                  </div>
+                </div>
               </div>
 
               <div class="flex flex-col gap-3 self-start lg:items-end">
@@ -126,24 +139,17 @@ defmodule EverydayDashWeb.DashboardLive do
     end
   end
 
-  defp current_hero_message do
-    now = NaiveDateTime.local_now()
-    minute_of_day = now.hour * 60 + now.minute
-
-    Enum.at(@hero_messages, rem(minute_of_day, length(@hero_messages)))
-  end
-
   defp hero_message_copy(message), do: "Remember: #{message}"
 
-  defp schedule_hero_message_refresh do
-    Process.send_after(self(), :refresh_hero_message, milliseconds_until_next_minute())
+  defp hero_messages_json do
+    @hero_messages
+    |> Enum.map(&hero_message_copy/1)
+    |> Jason.encode!()
   end
 
-  defp milliseconds_until_next_minute do
-    now = NaiveDateTime.local_now()
-    microseconds = elem(now.microsecond, 0)
-    elapsed_ms = now.second * 1_000 + div(microseconds, 1_000)
+  defp first_hero_message, do: List.first(@hero_messages)
 
-    max(60_000 - elapsed_ms, 1)
+  defp longest_hero_message do
+    Enum.max_by(@hero_messages, &String.length/1)
   end
 end
