@@ -111,6 +111,7 @@ defmodule EverydayDash.Dashboard.Loader do
     series = Series.build(counts, Dashboard.graph_days(), Dashboard.average_window_days(), today)
     average_series = series.average
     raw_series = series.raw
+    status = Map.get(payload, :status, :ok)
 
     current_average =
       average_series
@@ -129,7 +130,7 @@ defmodule EverydayDash.Dashboard.Loader do
       accent: spec.accent,
       unit: spec.unit,
       source_label: Map.get(payload, :source_label, spec.source_label),
-      status: :ok,
+      status: status,
       status_message: Map.get(payload, :status_message, "Live data"),
       setup_envs: spec.setup_envs,
       current_average: current_average,
@@ -137,7 +138,7 @@ defmodule EverydayDash.Dashboard.Loader do
       total_count: Enum.reduce(raw_series, 0, &(&1.value + &2)),
       average_series: average_series,
       raw_series: raw_series,
-      updated_at: now()
+      updated_at: Map.get(payload, :updated_at, now())
     }
   end
 

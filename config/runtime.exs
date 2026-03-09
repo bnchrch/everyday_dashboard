@@ -30,6 +30,7 @@ config :everyday_dash, EverydayDash.Dashboard,
     client_id: System.get_env("STRAVA_CLIENT_ID"),
     client_secret: System.get_env("STRAVA_CLIENT_SECRET"),
     refresh_token: System.get_env("STRAVA_REFRESH_TOKEN"),
+    cache_ttl_ms: parse_integer.("STRAVA_CACHE_TTL_MS", 900_000),
     token_store_backend:
       case System.get_env("STRAVA_TOKEN_STORE_BACKEND") do
         "database" -> :database

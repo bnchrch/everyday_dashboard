@@ -73,7 +73,7 @@ defmodule EverydayDashWeb.DashboardComponents do
         </div>
 
         <div
-          :if={@metric.status in [:setup_required, :error]}
+          :if={@metric.status == :setup_required}
           class="rounded-[1.4rem] border border-white/10 bg-white/6 px-4 py-4 text-sm text-white/78"
         >
           <p>{@metric.status_message}</p>
@@ -202,7 +202,8 @@ defmodule EverydayDashWeb.DashboardComponents do
   defp status_label(:setup_required), do: "Setup"
   defp status_label(:error), do: "Retrying"
 
-  defp status_copy(%{status: :ok}), do: "Live from the source."
+  defp status_copy(%{status: :ok, status_message: "Live data"}), do: "Live from the source."
+  defp status_copy(%{status: :ok, status_message: message}), do: message
   defp status_copy(%{status: :stale, status_message: message}), do: message
   defp status_copy(%{status: :loading, status_message: message}), do: message
   defp status_copy(%{status: :setup_required, status_message: message}), do: message
