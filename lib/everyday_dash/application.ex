@@ -16,7 +16,7 @@ defmodule EverydayDash.Application do
         repo_children() ++
         [
           {Task.Supervisor, name: EverydayDash.TaskSupervisor},
-          EverydayDash.Dashboard.Server,
+          EverydayDash.Dashboard.RefreshManager,
           EverydayDashWeb.Endpoint
         ]
 

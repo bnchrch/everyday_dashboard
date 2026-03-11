@@ -1,30 +1,40 @@
 defmodule EverydayDash.Dashboard.Sources.Habitify do
   @moduledoc false
 
+  alias EverydayDash.Accounts
   alias EverydayDash.Dashboard
   alias EverydayDash.Dashboard.HabitifyHistory
   alias EverydayDash.Dashboard.Series
 
-  @base_url "https://api.habitify.me"
-
-  def fetch(today, graph_days) when graph_days > 0 do
-    config = Dashboard.habitify_config()
-    api_key = Map.get(config, :api_key)
-
-    cond do
-      blank?(api_key) ->
-        {:error, :missing_config, "Set HABITIFY_API_KEY to load live Habitify habits."}
-
-      true ->
-        with {:ok, habits} <- fetch_habits(config, api_key),
-             {:ok, cards} <- fetch_cards(habits, today, graph_days, config, api_key) do
-          {:ok, %{cards: cards, status_message: "Live data"}}
-        end
+  def verify_api_key(api_key) when is_binary(api_key) do
+    case get(api_key, "/habits") do
+      {:ok, habits} when is_list(habits) -> {:ok, Enum.reject(habits, &archived?/1)}
+      {:ok, _payload} -> {:error, "Habitify returned an invalid habits payload."}
+      {:error, _reason, message} -> {:error, message}
     end
   end
 
-  defp fetch_habits(config, api_key) do
-    with {:ok, habits} when is_list(habits) <- get(config, api_key, "/habits") do
+  def fetch(today, graph_days, integration) when graph_days > 0 do
+    with {:ok, credentials} <- Accounts.decrypt_integration_credentials(integration),
+         api_key when is_binary(api_key) <- Map.get(credentials, "api_key"),
+         {:ok, habits} <- fetch_habits(api_key),
+         {:ok, cards} <- fetch_cards(habits, today, graph_days, api_key) do
+      {:ok,
+       %{cards: cards, status: :ok, status_message: "Live data", updated_at: DateTime.utc_now()},
+       %{
+         external_username: integration.external_username || "Habitify"
+       }}
+    else
+      nil ->
+        {:error, :missing_credentials, "Habitify API key is missing.", %{}}
+
+      {:error, _reason, _message} = error ->
+        normalize_error(error)
+    end
+  end
+
+  defp fetch_habits(api_key) do
+    with {:ok, habits} when is_list(habits) <- get(api_key, "/habits") do
       {:ok, Enum.reject(habits, &archived?/1)}
     else
       {:ok, _payload} ->
@@ -35,10 +45,10 @@ defmodule EverydayDash.Dashboard.Sources.Habitify do
     end
   end
 
-  defp fetch_cards(habits, today, graph_days, config, api_key) do
+  defp fetch_cards(habits, today, graph_days, api_key) do
     habits
     |> Task.async_stream(
-      &build_card(&1, graph_days, today, config, api_key),
+      &build_card(&1, graph_days, today, api_key),
       max_concurrency: max_concurrency(habits),
       ordered: true,
       timeout: :infinity
@@ -59,9 +69,8 @@ defmodule EverydayDash.Dashboard.Sources.Habitify do
     end
   end
 
-  defp build_card(habit, graph_days, today, config, api_key) do
-    with {:ok, logged_values_by_date} <-
-           fetch_logged_values(habit, graph_days, today, config, api_key) do
+  defp build_card(habit, graph_days, today, api_key) do
+    with {:ok, logged_values_by_date} <- fetch_logged_values(habit, graph_days, today, api_key) do
       history =
         HabitifyHistory.build(
           logged_values_by_date,
@@ -83,14 +92,14 @@ defmodule EverydayDash.Dashboard.Sources.Habitify do
     end
   end
 
-  defp fetch_logged_values(habit, graph_days, today, config, api_key) do
+  defp fetch_logged_values(habit, graph_days, today, api_key) do
     dates = Series.display_dates(graph_days, today)
     habit_id = habit["id"]
     from = format_target_date(hd(dates))
     to = format_range_end(List.last(dates))
 
     with {:ok, logs} when is_list(logs) <-
-           get(config, api_key, "/logs/#{habit_id}", params: [from: from, to: to]) do
+           get(api_key, "/logs/#{habit_id}", params: [from: from, to: to]) do
       {:ok, aggregate_logs_by_date(logs)}
     else
       {:ok, _payload} ->
@@ -101,16 +110,23 @@ defmodule EverydayDash.Dashboard.Sources.Habitify do
     end
   end
 
-  defp get(config, api_key, path, options \\ []) do
+  defp get(api_key, path, options \\ []) do
+    config = Dashboard.habitify_config()
+
     request =
       Req.new(
-        url: base_url(config) <> path,
-        headers: [
-          {"authorization", api_key},
-          {"accept", "application/json"},
-          {"user-agent", "EverydayDash"}
-        ],
-        receive_timeout: 15_000
+        Keyword.merge(
+          [
+            url: base_url(config) <> path,
+            headers: [
+              {"authorization", api_key},
+              {"accept", "application/json"},
+              {"user-agent", "EverydayDash"}
+            ],
+            receive_timeout: 15_000
+          ],
+          Map.get(config, :request_options, [])
+        )
       )
 
     params = Keyword.get(options, :params, [])
@@ -245,7 +261,9 @@ defmodule EverydayDash.Dashboard.Sources.Habitify do
     |> max(1)
   end
 
-  defp base_url(config), do: Map.get(config, :base_url, @base_url)
+  defp normalize_error({:error, reason, message}), do: {:error, reason, message, %{}}
+
+  defp base_url(config), do: Map.get(config, :base_url, "https://api.habitify.me")
 
   defp format_utc_offset(offset_seconds) do
     sign = if offset_seconds < 0, do: "-", else: "+"

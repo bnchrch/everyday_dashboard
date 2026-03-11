@@ -1,27 +1,25 @@
 defmodule EverydayDashWeb.DashboardLiveTest do
   use EverydayDashWeb.ConnCase, async: false
 
-  alias EverydayDash.Dashboard.Loader
   import Phoenix.LiveViewTest
+  import EverydayDash.AccountsFixtures
 
-  setup do
-    original_config = Application.get_env(:everyday_dash, EverydayDash.Dashboard)
+  alias EverydayDash.Accounts
+  alias EverydayDash.Dashboard
+  alias EverydayDash.Repo
 
-    on_exit(fn ->
-      Application.put_env(:everyday_dash, EverydayDash.Dashboard, original_config)
-    end)
-
-    :ok
-  end
-
-  test "renders the metric cards and injected habitify cards", %{conn: conn} do
-    {:ok, view, _html} = live(conn, ~p"/")
+  test "renders the metric cards and persisted habitify cards", %{conn: conn} do
+    user = published_user_fixture("metric-owner")
 
     snapshot =
-      Loader.initial_snapshot()
-      |> Map.put(:refreshing?, false)
+      Dashboard.Loader.initial_snapshot()
       |> Map.put(:updated_at, ~U[2026-03-09 12:00:00Z])
+      |> Map.put(:metrics, [
+        fallback_metric(:github_commits, "GitHub"),
+        stale_strava_metric()
+      ])
       |> Map.put(:habitify, %{
+        hidden?: false,
         cards: [
           habit_card("habit-floss", "Floss", "completed", 7),
           habit_card("habit-todo", "Create Todo List", "in_progress", 5)
@@ -31,11 +29,11 @@ defmodule EverydayDashWeb.DashboardLiveTest do
         updated_at: ~U[2026-03-09 12:00:00Z]
       })
 
-    send(view.pid, {:dashboard_snapshot, snapshot})
-    _html = render(view)
+    persist_snapshot(user, snapshot)
+
+    {:ok, view, _html} = live(conn, ~p"/u/#{user.slug}")
 
     assert has_element?(view, "#hero-message-rotator")
-    assert has_element?(view, "#dashboard-refresh-button")
     assert has_element?(view, "#dashboard-metrics-grid")
     assert has_element?(view, "#metric-card-github_commits")
     assert has_element?(view, "#metric-card-strava_activities")
@@ -45,34 +43,38 @@ defmodule EverydayDashWeb.DashboardLiveTest do
     assert has_element?(view, "#habit-card-habit-todo")
   end
 
-  test "renders the habitify setup state when the api key is absent", %{conn: conn} do
-    Application.put_env(:everyday_dash, EverydayDash.Dashboard, dashboard_config())
+  test "renders an empty state when nothing public is connected", %{conn: conn} do
+    user = published_user_fixture("empty-owner")
+    persist_snapshot(user, Dashboard.Loader.initial_snapshot())
 
-    {:ok, view, _html} = live(conn, ~p"/")
+    {:ok, view, _html} = live(conn, ~p"/u/#{user.slug}")
 
-    snapshot = Loader.fetch()
-
-    send(view.pid, {:dashboard_snapshot, snapshot})
-    _html = render(view)
-
-    assert has_element?(view, "#habitify-section")
-    assert has_element?(view, "#habitify-empty-state")
-    assert has_element?(view, "#habitify-empty-state code", "HABITIFY_API_KEY")
+    assert has_element?(view, "#dashboard-empty-state")
+    refute has_element?(view, "#dashboard-metrics-grid")
+    refute has_element?(view, "#habitify-section")
   end
 
   test "renders friendly Strava stale copy without setup env pills", %{conn: conn} do
-    {:ok, view, _html} = live(conn, ~p"/")
+    user = published_user_fixture("strava-owner")
 
     snapshot =
-      Loader.initial_snapshot()
-      |> Map.put(:refreshing?, false)
+      Dashboard.Loader.initial_snapshot()
       |> Map.put(:updated_at, ~U[2026-03-09 12:00:00Z])
       |> Map.put(:metrics, [
         stale_strava_metric(),
-        fallback_metric(:github_commits, "Work")
+        fallback_metric(:github_commits, "GitHub")
       ])
+      |> Map.put(:habitify, %{
+        hidden?: true,
+        cards: [],
+        status: nil,
+        status_message: nil,
+        updated_at: nil
+      })
 
-    send(view.pid, {:dashboard_snapshot, snapshot})
+    persist_snapshot(user, snapshot)
+
+    {:ok, view, _html} = live(conn, ~p"/u/#{user.slug}")
     html = render(view)
 
     assert has_element?(
@@ -84,6 +86,19 @@ defmodule EverydayDashWeb.DashboardLiveTest do
     refute has_element?(view, "#metric-card-strava_activities code")
     refute html =~ "\"errors\""
     refute html =~ "Rate Limit Exceeded"
+  end
+
+  defp published_user_fixture(slug) do
+    user = user_fixture()
+
+    user
+    |> Ecto.Changeset.change(slug: slug, dashboard_published_at: DateTime.utc_now())
+    |> Repo.update!()
+    |> Accounts.get_user_with_dashboard!()
+  end
+
+  defp persist_snapshot(user, snapshot) do
+    Dashboard.persist_snapshot!(Accounts.get_user_with_dashboard!(user.id), snapshot)
   end
 
   defp habit_card(id, name, today_status, completed_days) do
@@ -110,10 +125,10 @@ defmodule EverydayDashWeb.DashboardLiveTest do
         "Daily Strava activity count over the last month, smoothed with the same trailing window.",
       accent: "pine",
       unit: "activities/day",
-      source_label: "Play",
+      source_label: "Strava",
       status: :stale,
       status_message: "Using cached Strava data while the rate limit resets.",
-      setup_envs: ["STRAVA_CLIENT_ID", "STRAVA_CLIENT_SECRET", "STRAVA_REFRESH_TOKEN"],
+      setup_envs: [],
       current_average: 1.4,
       today_count: 1,
       total_count: 4,
@@ -133,7 +148,7 @@ defmodule EverydayDashWeb.DashboardLiveTest do
       source_label: headline,
       status: :ok,
       status_message: "Live data",
-      setup_envs: ["GITHUB_USERNAME", "GITHUB_TOKEN"],
+      setup_envs: [],
       current_average: 0.0,
       today_count: 0,
       total_count: 0,
@@ -153,22 +168,5 @@ defmodule EverydayDashWeb.DashboardLiveTest do
     Enum.with_index(values, fn value, index ->
       %{date: Date.add(~D[2026-03-06], index), value: value}
     end)
-  end
-
-  defp dashboard_config do
-    [
-      refresh_interval_ms: 60_000,
-      graph_days: 30,
-      average_window_days: 7,
-      github: %{username: nil, token: nil},
-      habitify: %{api_key: nil},
-      strava: %{
-        client_id: nil,
-        client_secret: nil,
-        refresh_token: nil,
-        token_store_backend: :file,
-        token_store_path: "/tmp/strava_tokens_test.json"
-      }
-    ]
   end
 end

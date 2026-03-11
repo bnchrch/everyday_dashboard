@@ -12,6 +12,56 @@
     </script>
   </head>
   <body class="min-h-screen antialiased">
+    <header class="relative z-10 border-b border-black/5 bg-white/55 backdrop-blur">
+      <div class="mx-auto flex w-full max-w-[92rem] items-center justify-between px-6 py-4 sm:px-10 lg:px-12">
+        <.link href={~p"/"} class="flex items-center gap-3">
+          <img src={~p"/images/logo.svg"} width="32" />
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-[0.24em] text-black/45">
+              Everyday Dash
+            </p>
+            <p class="text-sm font-semibold text-black/75">
+              Personal metrics as a public artifact
+            </p>
+          </div>
+        </.link>
+
+        <nav class="flex items-center gap-3 text-sm font-semibold text-black/70">
+          <%= if @current_scope && @current_scope.user do %>
+            <span class="hidden text-black/45 sm:inline-block">{@current_scope.user.email}</span>
+            <.link navigate={~p"/app"} class="rounded-full px-4 py-2 transition hover:bg-black/5">
+              App
+            </.link>
+            <.link
+              navigate={~p"/users/settings"}
+              class="rounded-full px-4 py-2 transition hover:bg-black/5"
+            >
+              Account
+            </.link>
+            <.link
+              href={~p"/users/log-out"}
+              method="delete"
+              class="rounded-full bg-black px-4 py-2 text-white transition hover:bg-black/85"
+            >
+              Log out
+            </.link>
+          <% else %>
+            <.link
+              href={~p"/users/log-in"}
+              class="rounded-full px-4 py-2 transition hover:bg-black/5"
+            >
+              Log in
+            </.link>
+            <.link
+              href={~p"/users/register"}
+              class="rounded-full bg-black px-4 py-2 text-white transition hover:bg-black/85"
+            >
+              Create account
+            </.link>
+          <% end %>
+        </nav>
+      </div>
+    </header>
     {@inner_content}
   </body>
 </html>

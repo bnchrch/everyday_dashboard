@@ -16,31 +16,37 @@ parse_csv = fn env_var ->
 end
 
 config :everyday_dash, EverydayDash.Dashboard,
-  refresh_interval_ms: parse_integer.("DASHBOARD_REFRESH_MS", 60_000),
+  refresh_ttl_ms: parse_integer.("DASHBOARD_REFRESH_TTL_MS", 900_000),
   graph_days: parse_integer.("DASHBOARD_GRAPH_DAYS", 30),
   average_window_days: 7,
   github: %{
-    username: System.get_env("GITHUB_USERNAME"),
-    token: System.get_env("GITHUB_TOKEN")
+    client_id: System.get_env("GITHUB_CLIENT_ID"),
+    client_secret: System.get_env("GITHUB_CLIENT_SECRET"),
+    authorize_url: "https://github.com/login/oauth/authorize",
+    token_url: "https://github.com/login/oauth/access_token",
+    api_url: "https://api.github.com/graphql"
   },
   habitify: %{
-    api_key: System.get_env("HABITIFY_API_KEY")
+    base_url: System.get_env("HABITIFY_BASE_URL", "https://api.habitify.me")
   },
   strava: %{
     client_id: System.get_env("STRAVA_CLIENT_ID"),
     client_secret: System.get_env("STRAVA_CLIENT_SECRET"),
-    refresh_token: System.get_env("STRAVA_REFRESH_TOKEN"),
     cache_ttl_ms: parse_integer.("STRAVA_CACHE_TTL_MS", 900_000),
-    token_store_backend:
-      case System.get_env("STRAVA_TOKEN_STORE_BACKEND") do
-        "database" -> :database
-        "file" -> :file
-        _ -> if(System.get_env("DATABASE_URL"), do: :database, else: :file)
-      end,
-    token_store_path:
-      System.get_env("STRAVA_TOKEN_STORE_PATH") ||
-        Path.expand("../tmp/strava_tokens.json", __DIR__)
+    authorize_url: "https://www.strava.com/oauth/authorize",
+    token_url: "https://www.strava.com/oauth/token",
+    activities_url: "https://www.strava.com/api/v3/athlete/activities"
   }
+
+credentials_secret =
+  System.get_env("CREDENTIALS_ENCRYPTION_SECRET") ||
+    if(config_env() == :prod, do: nil, else: "dev-credentials-secret-0123456789")
+
+if is_nil(credentials_secret) do
+  raise "environment variable CREDENTIALS_ENCRYPTION_SECRET is missing"
+end
+
+config :everyday_dash, EverydayDash.Credentials, secret: credentials_secret
 
 database_url = System.get_env("DATABASE_URL")
 
@@ -58,6 +64,10 @@ if database_url do
     pool_size: parse_integer.("POOL_SIZE", 2),
     socket_options:
       if(System.get_env("ECTO_IPV6", "false") in ["true", "1"], do: [:inet6], else: [])
+else
+  if config_env() == :prod do
+    raise "environment variable DATABASE_URL is missing"
+  end
 end
 
 # config/runtime.exs is executed for all environments, including

@@ -70,6 +70,15 @@ config :phoenix, :stacktrace_depth, 20
 # Initialize plugs at runtime for faster development compilation
 config :phoenix, :plug_init_mode, :runtime
 
+config :everyday_dash, EverydayDash.Repo,
+  username: System.get_env("PGUSER") || System.get_env("USER", "postgres"),
+  password: System.get_env("PGPASSWORD", ""),
+  hostname: System.get_env("PGHOST", "127.0.0.1"),
+  database: System.get_env("PGDATABASE", "everyday_dash_dev"),
+  stacktrace: true,
+  show_sensitive_data_on_connection_error: true,
+  pool_size: String.to_integer(System.get_env("POOL_SIZE", "10"))
+
 config :phoenix_live_view,
   # Include debug annotations and locations in rendered markup.
   # Changing this configuration will require mix clean and a full recompile.

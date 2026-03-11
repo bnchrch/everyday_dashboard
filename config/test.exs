@@ -1,5 +1,8 @@
 import Config
 
+# Only in tests, remove the complexity from the password hashing algorithm
+config :bcrypt_elixir, :log_rounds, 1
+
 # We don't run a server during test. If one is required,
 # you can enable the server option below.
 config :everyday_dash, EverydayDashWeb.Endpoint,
@@ -26,3 +29,15 @@ config :phoenix_live_view,
 # Sort query params output of verified routes for robust url comparisons
 config :phoenix,
   sort_verified_routes_query_params: true
+
+config :everyday_dash, EverydayDash.Repo,
+  username: System.get_env("PGUSER") || System.get_env("USER", "postgres"),
+  password: System.get_env("PGPASSWORD", ""),
+  hostname: System.get_env("PGHOST", "127.0.0.1"),
+  database: System.get_env("PGDATABASE", "everyday_dash_test"),
+  pool: Ecto.Adapters.SQL.Sandbox,
+  pool_size: 10
+
+config :everyday_dash, EverydayDash.Dashboard,
+  async_refresh?: false,
+  auto_refresh_on_mount?: false

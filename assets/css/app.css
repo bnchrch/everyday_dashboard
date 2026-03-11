@@ -179,6 +179,15 @@ body {
   pointer-events: none;
 }
 
+.provider-card {
+  border: 1px solid var(--dashboard-border);
+  border-radius: 1.6rem;
+  background: rgba(255, 255, 255, 0.45);
+  padding: 1.5rem;
+  box-shadow: 0 20px 55px rgba(36, 27, 15, 0.08);
+  backdrop-filter: blur(16px);
+}
+
 .dashboard-kicker {
   font-size: 0.76rem;
   font-weight: 700;

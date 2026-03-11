@@ -18,25 +18,31 @@ defmodule EverydayDashWeb.DashboardLive do
   ]
 
   @impl true
-  def mount(_params, _session, socket) do
-    if connected?(socket), do: Dashboard.subscribe()
+  def mount(%{"slug" => slug}, _session, socket) do
+    case Dashboard.public_dashboard_by_slug(slug) do
+      {:ok, user, snapshot} ->
+        if connected?(socket) do
+          Dashboard.subscribe(user)
+          Dashboard.maybe_refresh(user)
+        end
 
-    {:ok,
-     socket
-     |> assign(:page_title, "Everyday Dash")
-     |> assign(:snapshot, Dashboard.snapshot())
-     |> assign(:refresh_requested?, false)}
-  end
+        {:ok,
+         socket
+         |> assign(:page_title, "#{user.slug} - Everyday Dash")
+         |> assign(:owner, user)
+         |> assign(:snapshot, snapshot)}
 
-  @impl true
-  def handle_event("refresh", _params, socket) do
-    Dashboard.refresh_now()
-    {:noreply, assign(socket, :refresh_requested?, true)}
+      {:error, :not_found} ->
+        {:ok,
+         socket
+         |> put_flash(:error, "That dashboard is not published.")
+         |> push_navigate(to: ~p"/")}
+    end
   end
 
   @impl true
   def handle_info({:dashboard_snapshot, snapshot}, socket) do
-    {:noreply, assign(socket, snapshot: snapshot, refresh_requested?: false)}
+    {:noreply, assign(socket, snapshot: snapshot)}
   end
 
   @impl true
@@ -44,6 +50,7 @@ defmodule EverydayDashWeb.DashboardLive do
     ~H"""
     <Layouts.app
       flash={@flash}
+      current_scope={@current_scope}
       show_header={false}
       main_class="mx-auto flex min-h-screen w-full max-w-[92rem] items-center px-6 py-8 sm:px-10 lg:px-12 lg:py-14"
       inner_class="w-full"
@@ -60,6 +67,9 @@ defmodule EverydayDashWeb.DashboardLive do
                 <h1 class="dashboard-title text-balance text-5xl leading-none sm:text-6xl">
                   One page for the signals that matter every day.
                 </h1>
+                <p class="text-sm font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
+                  /u/{@owner.slug}
+                </p>
                 <div
                   id="hero-message-rotator"
                   phx-hook="HeroMessageRotator"
@@ -92,22 +102,27 @@ defmodule EverydayDashWeb.DashboardLive do
 
               <div class="flex flex-col gap-3 self-start lg:items-end">
                 <div class="text-sm leading-6 text-[color:var(--dashboard-muted)] lg:text-right">
-                  <p>{snapshot_status(@snapshot, @refresh_requested?)}</p>
+                  <p>{snapshot_status(@snapshot)}</p>
                   <p>{@snapshot.range_label}</p>
                 </div>
-
-                <button
-                  id="dashboard-refresh-button"
-                  type="button"
-                  phx-click="refresh"
-                  class="dashboard-refresh-button"
-                >
-                  {refresh_label(@snapshot, @refresh_requested?)}
-                </button>
               </div>
             </div>
 
-            <div class="mx-auto w-full max-w-5xl">
+            <div
+              :if={show_empty_state?(@snapshot)}
+              id="dashboard-empty-state"
+              class="rounded-[1.6rem] border border-[color:var(--dashboard-border)] bg-white/45 px-6 py-12 text-center"
+            >
+              <p class="dashboard-kicker">Nothing public yet</p>
+              <h2 class="mt-3 text-3xl font-semibold text-[color:var(--dashboard-ink)]">
+                This dashboard is published, but no providers are connected.
+              </h2>
+              <p class="mx-auto mt-4 max-w-2xl text-base leading-7 text-[color:var(--dashboard-muted)]">
+                Connect GitHub, Strava, or Habitify from the authenticated app to start filling this page with live signals.
+              </p>
+            </div>
+
+            <div :if={@snapshot.metrics != []} class="mx-auto w-full max-w-5xl">
               <div id="dashboard-metrics-grid" class="grid gap-6 lg:grid-cols-2">
                 <DashboardComponents.metric_card
                   :for={metric <- @snapshot.metrics}
@@ -118,6 +133,7 @@ defmodule EverydayDashWeb.DashboardLive do
             </div>
 
             <DashboardComponents.habitify_section
+              :if={!Map.get(@snapshot.habitify, :hidden?, false)}
               habitify={@snapshot.habitify}
               range_label={@snapshot.range_label}
             />
@@ -128,9 +144,9 @@ defmodule EverydayDashWeb.DashboardLive do
     """
   end
 
-  defp snapshot_status(snapshot, refresh_requested?) do
+  defp snapshot_status(snapshot) do
     cond do
-      snapshot.refreshing? or refresh_requested? ->
+      snapshot.refreshing? ->
         "Refreshing data..."
 
       is_nil(snapshot.updated_at) ->
@@ -141,10 +157,6 @@ defmodule EverydayDashWeb.DashboardLive do
     end
   end
 
-  defp refresh_label(snapshot, refresh_requested?) do
-    if snapshot.refreshing? or refresh_requested?, do: "Refreshing...", else: "Refresh now"
-  end
-
   defp relative_time(updated_at) do
     seconds = DateTime.diff(DateTime.utc_now(), updated_at, :second)
 
@@ -153,6 +165,10 @@ defmodule EverydayDashWeb.DashboardLive do
       seconds < 3_600 -> "#{div(seconds, 60)} minutes ago"
       true -> "#{div(seconds, 3_600)} hours ago"
     end
+  end
+
+  defp show_empty_state?(snapshot) do
+    snapshot.metrics == [] and Map.get(snapshot.habitify, :hidden?, false)
   end
 
   defp hero_messages_json do
