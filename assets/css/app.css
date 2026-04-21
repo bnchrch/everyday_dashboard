@@ -798,10 +798,13 @@ body:has(.dashboard-page--trmnl) {
 
 .dashboard-page--trmnl .metric-card__body {
   gap: 0.35rem;
+  justify-content: space-between;
 }
 
 .dashboard-page--trmnl .metric-card__header {
   gap: 0.35rem;
+  position: relative;
+  z-index: 2;
 }
 
 .dashboard-page--trmnl .metric-card__label,
@@ -843,30 +846,33 @@ body:has(.dashboard-page--trmnl) {
 }
 
 .dashboard-page--trmnl .metric-card__chart {
-  flex: 1;
+  position: absolute;
+  inset: 0.35rem;
   min-height: 0;
-  padding: 0.1rem 0 0.05rem;
+  padding: 0;
+  z-index: 0;
+  pointer-events: none;
 }
 
 .dashboard-page--trmnl .metric-card__grid {
-  stroke: rgba(0, 0, 0, 0.18);
+  stroke: rgba(0, 0, 0, 0.14);
 }
 
 .dashboard-page--trmnl .metric-card__area {
-  fill: rgba(0, 0, 0, 0.08);
+  fill: rgba(0, 0, 0, 0.06);
 }
 
 .dashboard-page--trmnl .metric-card__line {
   stroke: #000;
-  stroke-width: 2.4;
+  stroke-width: 2.2;
   filter: none;
 }
 
 .dashboard-page--trmnl .metric-card__chart-center {
-  inset: auto 0 0 0;
-  align-items: flex-end;
-  justify-content: flex-start;
-  padding: 0 0.15rem 0.1rem;
+  inset: 0;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.4rem;
 }
 
 .dashboard-page--trmnl .metric-card__chart-copy {
@@ -874,9 +880,9 @@ body:has(.dashboard-page--trmnl) {
   flex-direction: column;
   align-items: flex-start;
   gap: 0.04rem;
-  padding: 0.08rem 0.18rem;
+  padding: 0.16rem 0.24rem;
   border-radius: 0.3rem;
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.84);
   text-align: left;
 }
 
@@ -902,6 +908,8 @@ body:has(.dashboard-page--trmnl) {
   grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   gap: 0.25rem;
   font-size: 0.65rem;
+  position: relative;
+  z-index: 2;
 }
 
 .dashboard-page--trmnl .metric-card__stat {
@@ -928,6 +936,8 @@ body:has(.dashboard-page--trmnl) {
   font-size: 0.62rem;
   line-height: 1.15;
   color: rgba(0, 0, 0, 0.75);
+  position: relative;
+  z-index: 2;
 }
 
 .dashboard-page--trmnl .metric-card--status-stale .metric-card__status-note,
@@ -1199,10 +1209,13 @@ body:has(.dashboard-page--trmnl) {
 
   .metric-card__body {
     gap: 0.35rem;
+    justify-content: space-between;
   }
 
   .metric-card__header {
     gap: 0.35rem;
+    position: relative;
+    z-index: 2;
   }
 
   .metric-card__label,
@@ -1244,30 +1257,33 @@ body:has(.dashboard-page--trmnl) {
   }
 
   .metric-card__chart {
-    flex: 1;
+    position: absolute;
+    inset: 0.35rem;
     min-height: 0;
-    padding: 0.1rem 0 0.05rem;
+    padding: 0;
+    z-index: 0;
+    pointer-events: none;
   }
 
   .metric-card__grid {
-    stroke: rgba(0, 0, 0, 0.18);
+    stroke: rgba(0, 0, 0, 0.14);
   }
 
   .metric-card__area {
-    fill: rgba(0, 0, 0, 0.08);
+    fill: rgba(0, 0, 0, 0.06);
   }
 
   .metric-card__line {
     stroke: #000;
-    stroke-width: 2.4;
+    stroke-width: 2.2;
     filter: none;
   }
 
   .metric-card__chart-center {
-    inset: auto 0 0 0;
-    align-items: flex-end;
-    justify-content: flex-start;
-    padding: 0 0.15rem 0.1rem;
+    inset: 0;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0.4rem;
   }
 
   .metric-card__chart-copy {
@@ -1275,9 +1291,9 @@ body:has(.dashboard-page--trmnl) {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.04rem;
-    padding: 0.08rem 0.18rem;
+    padding: 0.16rem 0.24rem;
     border-radius: 0.3rem;
-    background: rgba(255, 255, 255, 0.92);
+    background: rgba(255, 255, 255, 0.84);
     text-align: left;
   }
 
@@ -1303,6 +1319,8 @@ body:has(.dashboard-page--trmnl) {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 0.25rem;
     font-size: 0.65rem;
+    position: relative;
+    z-index: 2;
   }
 
   .metric-card__stat {
@@ -1329,6 +1347,8 @@ body:has(.dashboard-page--trmnl) {
     font-size: 0.62rem;
     line-height: 1.15;
     color: rgba(0, 0, 0, 0.75);
+    position: relative;
+    z-index: 2;
   }
 
   .metric-card--status-stale .metric-card__status-note,
