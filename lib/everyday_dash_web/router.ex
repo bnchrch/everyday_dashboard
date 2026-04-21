@@ -18,6 +18,7 @@ defmodule EverydayDashWeb.Router do
     pipe_through :browser
 
     live "/", DashboardLive, :index
+    live "/trmnl", DashboardLive, :trmnl
   end
 
   # Other scopes may use custom stacks.

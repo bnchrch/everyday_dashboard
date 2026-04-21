@@ -24,13 +24,7 @@ defmodule EverydayDashWeb.DashboardLive do
     {:ok,
      socket
      |> assign(:page_title, "Everyday Dash")
-     |> assign(:snapshot, Dashboard.snapshot())
-     |> assign(:trmnl_forced?, false)}
-  end
-
-  @impl true
-  def handle_params(params, _uri, socket) do
-    {:noreply, assign(socket, :trmnl_forced?, trmnl_forced?(params))}
+     |> assign(:snapshot, Dashboard.snapshot())}
   end
 
   @impl true
@@ -44,7 +38,7 @@ defmodule EverydayDashWeb.DashboardLive do
     <Layouts.app
       flash={@flash}
       show_header={false}
-      main_class={dashboard_main_class(@trmnl_forced?)}
+      main_class={dashboard_main_class(@live_action)}
       inner_class="w-full"
     >
       <div id="dashboard-stage" class="dashboard-stage">
@@ -154,24 +148,15 @@ defmodule EverydayDashWeb.DashboardLive do
     Jason.encode!(@hero_messages)
   end
 
-  defp dashboard_main_class(trmnl_forced?) do
+  defp dashboard_main_class(live_action) do
     [
       "dashboard-page",
-      trmnl_forced? && "dashboard-page--trmnl",
+      live_action == :trmnl && "dashboard-page--trmnl",
       "mx-auto flex min-h-screen w-full max-w-[92rem] items-center px-6 py-8 sm:px-10 lg:px-12 lg:py-14"
     ]
     |> Enum.reject(&is_nil/1)
     |> Enum.join(" ")
   end
-
-  defp trmnl_forced?(params) do
-    params
-    |> Map.get("trmnl")
-    |> truthy_param?()
-  end
-
-  defp truthy_param?(value) when value in ["1", "true", "yes", "on"], do: true
-  defp truthy_param?(_value), do: false
 
   defp first_hero_message, do: List.first(@hero_messages)
 
