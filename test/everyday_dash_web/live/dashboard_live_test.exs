@@ -24,7 +24,9 @@ defmodule EverydayDashWeb.DashboardLiveTest do
       |> Map.put(:habitify, %{
         cards: [
           habit_card("habit-floss", "Floss", "completed", 7),
-          habit_card("habit-todo", "Create Todo List", "in_progress", 5)
+          habit_card("habit-todo", "Create Todo List", "in_progress", 5),
+          habit_card("habit-read", "Read", "completed", 18),
+          habit_card("habit-walk", "Walk", "idle", 11)
         ],
         status: :ok,
         status_message: "Live data",
@@ -34,15 +36,34 @@ defmodule EverydayDashWeb.DashboardLiveTest do
     send(view.pid, {:dashboard_snapshot, snapshot})
     _html = render(view)
 
+    assert has_element?(view, "#dashboard-stage")
+    assert has_element?(view, "#dashboard-shell")
+    assert has_element?(view, "#dashboard-layout")
+    assert has_element?(view, "#dashboard-header")
+    assert has_element?(view, "#dashboard-page-title")
     assert has_element?(view, "#hero-message-rotator")
+    assert has_element?(view, "#dashboard-status")
     assert has_element?(view, "#dashboard-refresh-button")
+    assert has_element?(view, "#dashboard-primary")
     assert has_element?(view, "#dashboard-metrics-grid")
     assert has_element?(view, "#metric-card-github_commits")
+    assert has_element?(view, "#metric-card-github_commits .metric-card__description")
     assert has_element?(view, "#metric-card-strava_activities")
+    assert has_element?(view, "#dashboard-habitify-rail")
     assert has_element?(view, "#habitify-section")
+    assert has_element?(view, "#habitify-section-header")
     assert has_element?(view, "#habitify-grid")
     assert has_element?(view, "#habit-card-habit-floss")
+
+    assert has_element?(
+             view,
+             "#habit-card-habit-floss .habit-card__summary",
+             "7/30 done - Completed"
+           )
+
     assert has_element?(view, "#habit-card-habit-todo")
+    assert has_element?(view, "#habit-card-habit-read")
+    assert has_element?(view, "#habit-card-habit-walk")
   end
 
   test "renders the habitify setup state when the api key is absent", %{conn: conn} do
@@ -56,7 +77,9 @@ defmodule EverydayDashWeb.DashboardLiveTest do
     _html = render(view)
 
     assert has_element?(view, "#habitify-section")
+    assert has_element?(view, "#habitify-section-header")
     assert has_element?(view, "#habitify-empty-state")
+    assert has_element?(view, "#habitify-empty-state .habitify-empty-state__status")
     assert has_element?(view, "#habitify-empty-state code", "HABITIFY_API_KEY")
   end
 
@@ -78,6 +101,12 @@ defmodule EverydayDashWeb.DashboardLiveTest do
     assert has_element?(
              view,
              "#metric-card-strava_activities",
+             "Using cached Strava data while the rate limit resets."
+           )
+
+    assert has_element?(
+             view,
+             "#metric-card-strava_activities .metric-card__status-note",
              "Using cached Strava data while the rate limit resets."
            )
 

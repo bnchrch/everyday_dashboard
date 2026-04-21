@@ -10,12 +10,12 @@ defmodule EverydayDashWeb.DashboardComponents do
     ~H"""
     <article id={"metric-card-#{@metric.id}"} class={metric_card_class(@metric)}>
       <div class="metric-card__wash"></div>
-      <div class="relative flex h-full flex-col gap-6">
-        <div class="flex items-start justify-between gap-5">
-          <div class="space-y-3">
+      <div class="metric-card__body relative flex h-full flex-col gap-6">
+        <div class="metric-card__header flex items-start justify-between gap-5">
+          <div class="metric-card__intro space-y-3">
             <p class="metric-card__label">{@metric.label}</p>
             <h2 class="metric-card__headline">{@metric.source_label}</h2>
-            <p class="max-w-xl text-sm leading-6 text-white/68">
+            <p class="metric-card__description max-w-xl text-sm leading-6 text-white/68">
               {@metric.description}
             </p>
           </div>
@@ -42,7 +42,7 @@ defmodule EverydayDashWeb.DashboardComponents do
             />
           </svg>
 
-          <div class="absolute inset-0 flex items-center justify-center">
+          <div class="metric-card__chart-center absolute inset-0 flex items-center justify-center">
             <div class="text-center">
               <p class="metric-card__subhead">{value_kicker(@metric.status)}</p>
               <p class="metric-card__value">{value_display(@metric)}</p>
@@ -51,7 +51,7 @@ defmodule EverydayDashWeb.DashboardComponents do
           </div>
         </div>
 
-        <div class="grid gap-3 text-sm text-white/78 sm:grid-cols-2">
+        <div class="metric-card__stats grid gap-3 text-sm text-white/78 sm:grid-cols-2">
           <div class="metric-card__stat">
             <span class="metric-card__stat-label">Today</span>
             <strong class="metric-card__stat-value">{@metric.today_count}</strong>
@@ -63,21 +63,23 @@ defmodule EverydayDashWeb.DashboardComponents do
           </div>
         </div>
 
-        <div class="flex flex-col gap-3 text-xs leading-5 text-white/62 sm:flex-row sm:items-end sm:justify-between">
-          <div>
+        <p class="metric-card__status-note">{status_copy(@metric)}</p>
+
+        <div class="metric-card__footer flex flex-col gap-3 text-xs leading-5 text-white/62 sm:flex-row sm:items-end sm:justify-between">
+          <div class="metric-card__meta">
             <p>{@range_label}</p>
             <p>Trailing 7-day average</p>
           </div>
 
-          <p>{status_copy(@metric)}</p>
+          <p class="metric-card__footer-copy">{status_copy(@metric)}</p>
         </div>
 
         <div
           :if={@metric.status == :setup_required}
-          class="rounded-[1.4rem] border border-white/10 bg-white/6 px-4 py-4 text-sm text-white/78"
+          class="metric-card__setup rounded-[1.4rem] border border-white/10 bg-white/6 px-4 py-4 text-sm text-white/78"
         >
-          <p>{@metric.status_message}</p>
-          <div class="mt-3 flex flex-wrap gap-2">
+          <p class="metric-card__setup-message">{@metric.status_message}</p>
+          <div class="metric-card__setup-envs mt-3 flex flex-wrap gap-2">
             <code :for={env_var <- @metric.setup_envs} class="metric-card__env">
               {env_var}
             </code>
@@ -91,7 +93,8 @@ defmodule EverydayDashWeb.DashboardComponents do
   defp metric_card_class(metric) do
     [
       "metric-card",
-      "metric-card--#{metric.accent}"
+      "metric-card--#{metric.accent}",
+      "metric-card--status-#{metric.status}"
     ]
   end
 
@@ -100,14 +103,20 @@ defmodule EverydayDashWeb.DashboardComponents do
 
   def habitify_section(assigns) do
     ~H"""
-    <section id="habitify-section" class="mx-auto flex w-full max-w-[78rem] flex-col gap-5">
-      <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div class="space-y-2">
-          <p class="dashboard-kicker">Habitify, pulled live</p>
+    <section
+      id="habitify-section"
+      class="habitify-section mx-auto flex w-full max-w-[78rem] flex-col gap-5"
+    >
+      <div
+        id="habitify-section-header"
+        class="habitify-section__header flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"
+      >
+        <div class="habitify-section__intro space-y-2">
+          <p class="dashboard-kicker habitify-section__kicker">Habitify, pulled live</p>
           <h2 class="habitify-section__title">Small graphs for the habits that shape the day.</h2>
         </div>
 
-        <div class="text-sm leading-6 text-[color:var(--dashboard-muted)] sm:text-right">
+        <div class="habitify-section__status text-sm leading-6 text-[color:var(--dashboard-muted)] sm:text-right">
           <p>{habitify_status_copy(@habitify)}</p>
           <p>{@range_label}</p>
         </div>
@@ -121,7 +130,9 @@ defmodule EverydayDashWeb.DashboardComponents do
         <div class="space-y-2">
           <p class="habitify-empty-state__eyebrow">{habitify_empty_eyebrow(@habitify)}</p>
           <h3 class="habitify-empty-state__title">{habitify_empty_title(@habitify)}</h3>
-          <p class="text-sm leading-6 text-white/74">{@habitify.status_message}</p>
+          <p class="habitify-empty-state__status text-sm leading-6 text-white/74">
+            {@habitify.status_message}
+          </p>
         </div>
 
         <div
@@ -135,7 +146,7 @@ defmodule EverydayDashWeb.DashboardComponents do
       <div
         :if={@habitify.cards != []}
         id="habitify-grid"
-        class="grid gap-5 lg:grid-cols-3"
+        class="habitify-grid grid gap-5 lg:grid-cols-3"
       >
         <.habit_card :for={card <- @habitify.cards} card={card} />
       </div>
@@ -149,9 +160,9 @@ defmodule EverydayDashWeb.DashboardComponents do
     ~H"""
     <article id={"habit-card-#{@card.id}"} class="habit-card">
       <div class="habit-card__wash"></div>
-      <div class="relative flex h-full flex-col gap-5">
-        <div class="flex items-start justify-between gap-4">
-          <div class="space-y-2">
+      <div class="habit-card__body relative flex h-full flex-col gap-5">
+        <div class="habit-card__header flex items-start justify-between gap-4">
+          <div class="habit-card__intro space-y-2">
             <p class="habit-card__eyebrow">Habit</p>
             <h3 class="habit-card__title">{@card.name}</h3>
             <p class="habit-card__goal">{@card.goal_label}</p>
@@ -172,7 +183,7 @@ defmodule EverydayDashWeb.DashboardComponents do
           </div>
         </div>
 
-        <div class="grid gap-3 sm:grid-cols-2">
+        <div class="habit-card__stats grid gap-3 sm:grid-cols-2">
           <div class="habit-card__stat">
             <span class="habit-card__stat-label">30d done</span>
             <strong class="habit-card__stat-value">
@@ -185,6 +196,10 @@ defmodule EverydayDashWeb.DashboardComponents do
             <strong class="habit-card__stat-copy">{habit_today_copy(@card.today_status)}</strong>
           </div>
         </div>
+
+        <p class="habit-card__summary">
+          {@card.completed_days}/{@card.total_days} done - {habit_today_copy(@card.today_status)}
+        </p>
       </div>
     </article>
     """

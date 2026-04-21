@@ -1,6 +1,7 @@
 defmodule EverydayDash.Dashboard.LoaderTest do
   use ExUnit.Case, async: false
 
+  alias EverydayDash.Dashboard
   alias EverydayDash.Dashboard.Loader
   alias EverydayDash.TestSupport.StravaCacheStoreStub
 
@@ -16,10 +17,11 @@ defmodule EverydayDash.Dashboard.LoaderTest do
 
   test "preserves a source-provided stale status for Strava when a persisted backoff is active" do
     cache_agent = start_supervised!({Agent, fn -> %{record: nil, saves: []} end})
+    today = Dashboard.today()
 
     StravaCacheStoreStub.put(cache_agent, %{
       service: "strava_activities",
-      counts: %{"2026-03-09" => 2},
+      counts: %{Date.to_iso8601(today) => 2},
       graph_days: 30,
       window_days: 7,
       fetched_at: DateTime.utc_now(),

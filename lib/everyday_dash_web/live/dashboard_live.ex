@@ -45,19 +45,24 @@ defmodule EverydayDashWeb.DashboardLive do
     <Layouts.app
       flash={@flash}
       show_header={false}
-      main_class="mx-auto flex min-h-screen w-full max-w-[92rem] items-center px-6 py-8 sm:px-10 lg:px-12 lg:py-14"
+      main_class="dashboard-page mx-auto flex min-h-screen w-full max-w-[92rem] items-center px-6 py-8 sm:px-10 lg:px-12 lg:py-14"
       inner_class="w-full"
     >
-      <div class="dashboard-stage">
+      <div id="dashboard-stage" class="dashboard-stage">
         <div class="dashboard-orb dashboard-orb--warm"></div>
         <div class="dashboard-orb dashboard-orb--cool"></div>
 
-        <section class="dashboard-shell w-full">
-          <div class="flex flex-col gap-10">
-            <div class="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
-              <div class="max-w-3xl space-y-5">
-                <p class="dashboard-kicker">Life metrics, refreshed from the source</p>
-                <h1 class="dashboard-title text-balance text-5xl leading-none sm:text-6xl">
+        <section id="dashboard-shell" class="dashboard-shell w-full">
+          <div id="dashboard-layout" class="dashboard-layout">
+            <header id="dashboard-header" class="dashboard-header">
+              <div class="dashboard-header__main max-w-3xl space-y-5">
+                <p class="dashboard-kicker dashboard-header__kicker">
+                  Life metrics, refreshed from the source
+                </p>
+                <h1
+                  id="dashboard-page-title"
+                  class="dashboard-title dashboard-header__title text-balance text-5xl leading-none sm:text-6xl"
+                >
                   One page for the signals that matter every day.
                 </h1>
                 <div
@@ -65,7 +70,7 @@ defmodule EverydayDashWeb.DashboardLive do
                   phx-hook="HeroMessageRotator"
                   phx-update="ignore"
                   data-messages={hero_messages_json()}
-                  class="dashboard-hero-copy max-w-2xl text-base leading-7 text-[color:var(--dashboard-muted)] sm:text-lg"
+                  class="dashboard-hero-copy dashboard-header__hero-copy max-w-2xl text-base leading-7 text-[color:var(--dashboard-muted)] sm:text-lg"
                 >
                   <p class="dashboard-hero-copy__line">
                     <span class="dashboard-hero-copy__label">Remember:</span>
@@ -90,10 +95,13 @@ defmodule EverydayDashWeb.DashboardLive do
                 </div>
               </div>
 
-              <div class="flex flex-col gap-3 self-start lg:items-end">
-                <div class="text-sm leading-6 text-[color:var(--dashboard-muted)] lg:text-right">
+              <div class="dashboard-header__status flex flex-col gap-3 self-start lg:items-end">
+                <div
+                  id="dashboard-status"
+                  class="dashboard-header__status-copy text-sm leading-6 text-[color:var(--dashboard-muted)] lg:text-right"
+                >
                   <p>{snapshot_status(@snapshot, @refresh_requested?)}</p>
-                  <p>{@snapshot.range_label}</p>
+                  <p class="dashboard-header__range">{@snapshot.range_label}</p>
                 </div>
 
                 <button
@@ -105,22 +113,29 @@ defmodule EverydayDashWeb.DashboardLive do
                   {refresh_label(@snapshot, @refresh_requested?)}
                 </button>
               </div>
-            </div>
+            </header>
 
-            <div class="mx-auto w-full max-w-5xl">
-              <div id="dashboard-metrics-grid" class="grid gap-6 lg:grid-cols-2">
-                <DashboardComponents.metric_card
-                  :for={metric <- @snapshot.metrics}
-                  metric={metric}
-                  range_label={@snapshot.range_label}
-                />
+            <section id="dashboard-primary" class="dashboard-primary">
+              <div class="dashboard-primary__inner mx-auto w-full max-w-5xl">
+                <div
+                  id="dashboard-metrics-grid"
+                  class="dashboard-metrics-grid grid gap-6 lg:grid-cols-2"
+                >
+                  <DashboardComponents.metric_card
+                    :for={metric <- @snapshot.metrics}
+                    metric={metric}
+                    range_label={@snapshot.range_label}
+                  />
+                </div>
               </div>
-            </div>
+            </section>
 
-            <DashboardComponents.habitify_section
-              habitify={@snapshot.habitify}
-              range_label={@snapshot.range_label}
-            />
+            <section id="dashboard-habitify-rail" class="dashboard-habitify-rail">
+              <DashboardComponents.habitify_section
+                habitify={@snapshot.habitify}
+                range_label={@snapshot.range_label}
+              />
+            </section>
           </div>
         </section>
       </div>
