@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=800, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <title>{@page_title}</title>
+    <style>
+      html, body {
+        margin: 0;
+        width: 800px;
+        height: 480px;
+        overflow: hidden;
+        background: #fff;
+        color: #000;
+        font-family: "Avenir Next", "Segoe UI", sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      .trmnl-shot {
+        width: 800px;
+        height: 480px;
+        padding: 8px;
+        background: #fff;
+      }
+
+      .trmnl-shot__frame {
+        display: grid;
+        grid-template-columns: minmax(0, 1.85fr) minmax(0, 1.1fr);
+        grid-template-rows: auto minmax(0, 1fr);
+        grid-template-areas:
+          "header habits"
+          "metrics habits";
+        gap: 8px;
+        width: 100%;
+        height: 100%;
+        padding: 8px;
+        border: 1px solid #000;
+        border-radius: 8px;
+        background: #fff;
+      }
+
+      .trmnl-shot__header {
+        grid-area: header;
+        display: flex;
+        justify-content: flex-end;
+        align-items: flex-start;
+        min-height: 20px;
+      }
+
+      .trmnl-shot__status {
+        margin: 0;
+        font-size: 12px;
+        line-height: 1.1;
+      }
+
+      .trmnl-shot__metrics,
+      .trmnl-shot__habits {
+        min-width: 0;
+        min-height: 0;
+      }
+
+      .trmnl-shot__metrics {
+        grid-area: metrics;
+        display: grid;
+        gap: 8px;
+        grid-template-rows: repeat(2, minmax(0, 1fr));
+      }
+
+      .trmnl-shot__habits {
+        grid-area: habits;
+        display: grid;
+        gap: 8px;
+        grid-template-rows: repeat(3, minmax(0, 1fr));
+      }
+
+      .shot-card {
+        min-width: 0;
+        min-height: 0;
+        border: 1px solid #000;
+        border-radius: 8px;
+        background: #fff;
+      }
+
+      .shot-metric {
+        position: relative;
+        overflow: hidden;
+        padding: 8px;
+      }
+
+      .shot-metric__body {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 6px;
+        height: 100%;
+      }
+
+      .shot-metric__header,
+      .shot-habit__header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 8px;
+      }
+
+      .shot-metric__intro,
+      .shot-habit__intro {
+        min-width: 0;
+      }
+
+      .shot-eyebrow {
+        margin: 0;
+        font-size: 10px;
+        line-height: 1;
+        text-transform: uppercase;
+        font-weight: 700;
+        color: rgba(0, 0, 0, 0.68);
+      }
+
+      .shot-metric__title,
+      .shot-habit__title,
+      .shot-empty__title {
+        margin: 8px 0 0;
+        font-family: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+        line-height: 0.95;
+        color: #000;
+      }
+
+      .shot-metric__title {
+        font-size: 21px;
+      }
+
+      .shot-habit__title,
+      .shot-empty__title {
+        font-size: 18px;
+      }
+
+      .shot-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 4px 8px;
+        border: 1px solid #000;
+        border-radius: 999px;
+        font-size: 10px;
+        line-height: 1;
+        font-weight: 700;
+        text-transform: uppercase;
+        white-space: nowrap;
+      }
+
+      .shot-metric__chart-shell {
+        position: absolute;
+        inset: 8px;
+      }
+
+      .shot-metric__chart {
+        width: 100%;
+        height: 100%;
+      }
+
+      .shot-metric__grid {
+        stroke: rgba(0, 0, 0, 0.14);
+        stroke-width: 0.8;
+      }
+
+      .shot-metric__area {
+        fill: rgba(0, 0, 0, 0.06);
+      }
+
+      .shot-metric__line {
+        fill: none;
+        stroke: #000;
+        stroke-width: 2.2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .shot-metric__value-block {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 8px;
+        z-index: 2;
+      }
+
+      .shot-metric__value-block p {
+        margin: 0;
+      }
+
+      .shot-metric__value-block-inner {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1px;
+        padding: 4px 6px;
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.88);
+        text-align: left;
+      }
+
+      .shot-metric__subhead {
+        font-size: 9px;
+        line-height: 1.05;
+        text-transform: uppercase;
+        color: rgba(0, 0, 0, 0.7);
+      }
+
+      .shot-metric__value {
+        font-size: 44px;
+        line-height: 0.9;
+        color: #000;
+      }
+
+      .shot-metric__unit {
+        font-size: 10px;
+        line-height: 1.05;
+        color: rgba(0, 0, 0, 0.75);
+      }
+
+      .shot-metric__stats {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px;
+        position: relative;
+        z-index: 2;
+      }
+
+      .shot-stat {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 8px;
+        min-width: 0;
+        padding: 6px 8px;
+        border: 1px solid rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.82);
+      }
+
+      .shot-stat__label {
+        font-size: 10px;
+        line-height: 1.1;
+        color: rgba(0, 0, 0, 0.7);
+      }
+
+      .shot-stat__value {
+        font-size: 16px;
+        line-height: 1;
+        color: #000;
+      }
+
+      .shot-note,
+      .shot-habit__goal,
+      .shot-habit__summary {
+        margin: 0;
+        font-size: 10px;
+        line-height: 1.15;
+        color: rgba(0, 0, 0, 0.78);
+      }
+
+      .shot-note {
+        position: relative;
+        z-index: 2;
+      }
+
+      .shot-habit,
+      .shot-empty {
+        padding: 8px;
+      }
+
+      .shot-habit {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .shot-habit__bars {
+        display: grid;
+        grid-template-columns: repeat(30, minmax(0, 1fr));
+        gap: 2px;
+        align-items: end;
+        height: 26px;
+      }
+
+      .shot-habit__bar {
+        display: block;
+        width: 100%;
+        height: 20%;
+        border-radius: 999px;
+        background: rgba(0, 0, 0, 0.16);
+      }
+
+      .shot-habit__bar--done {
+        height: 100%;
+        background: #000;
+      }
+
+      .shot-empty {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <main id="trmnl-screenshot" class="trmnl-shot">
+      <div class="trmnl-shot__frame">
+        <header class="trmnl-shot__header">
+          <p class="trmnl-shot__status">{snapshot_status(@snapshot)}</p>
+        </header>
+
+        <section id="trmnl-screenshot-metrics" class="trmnl-shot__metrics">
+          <.metric_card :for={metric <- @snapshot.metrics} metric={metric} />
+        </section>
+
+        <aside id="trmnl-screenshot-habits" class="trmnl-shot__habits">
+          <%= if shown_habit_cards(@snapshot.habitify) == [] do %>
+            <.habitify_empty_state habitify={@snapshot.habitify} />
+          <% else %>
+            <.habit_card :for={card <- shown_habit_cards(@snapshot.habitify)} card={card} />
+          <% end %>
+        </aside>
+      </div>
+    </main>
+  </body>
+</html>

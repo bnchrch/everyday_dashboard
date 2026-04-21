@@ -84,8 +84,14 @@ defmodule EverydayDashWeb.DashboardLiveTest do
     assert has_element?(view, "#habitify-empty-state code", "HABITIFY_API_KEY")
   end
 
-  test "supports forcing TRMNL mode with a query param", %{conn: conn} do
-    {:ok, view, _html} = live(conn, ~p"/?trmnl=1")
+  test "keeps the main dashboard out of TRMNL mode", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/")
+
+    refute has_element?(view, "main.dashboard-page--trmnl")
+  end
+
+  test "renders the dedicated TRMNL route", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/trmnl")
 
     assert has_element?(view, "main.dashboard-page--trmnl")
   end

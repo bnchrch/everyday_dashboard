@@ -17,7 +17,9 @@ defmodule EverydayDashWeb.Router do
   scope "/", EverydayDashWeb do
     pipe_through :browser
 
+    get "/trmnl/screenshot", TrmnlController, :show
     live "/", DashboardLive, :index
+    live "/trmnl", DashboardLive, :trmnl
   end
 
   # Other scopes may use custom stacks.
