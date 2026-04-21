@@ -26,12 +26,7 @@ defmodule EverydayDashWeb.DashboardComponents do
         </div>
 
         <div class="metric-card__chart">
-          <svg
-            viewBox="0 0 100 100"
-            preserveAspectRatio="none"
-            class="metric-card__chart-svg"
-            aria-hidden="true"
-          >
+          <svg viewBox="0 0 100 100" class="metric-card__chart-svg" aria-hidden="true">
             <line
               :for={y <- [20, 42, 64, 86]}
               x1="0"
