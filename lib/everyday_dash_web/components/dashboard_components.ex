@@ -43,7 +43,7 @@ defmodule EverydayDashWeb.DashboardComponents do
           </svg>
 
           <div class="metric-card__chart-center absolute inset-0 flex items-center justify-center">
-            <div class="text-center">
+            <div class="metric-card__chart-copy text-center">
               <p class="metric-card__subhead">{value_kicker(@metric.status)}</p>
               <p class="metric-card__value">{value_display(@metric)}</p>
               <p class="metric-card__unit">{value_unit(@metric)}</p>

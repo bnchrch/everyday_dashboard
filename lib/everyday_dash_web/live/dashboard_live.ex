@@ -25,18 +25,17 @@ defmodule EverydayDashWeb.DashboardLive do
      socket
      |> assign(:page_title, "Everyday Dash")
      |> assign(:snapshot, Dashboard.snapshot())
-     |> assign(:refresh_requested?, false)}
+     |> assign(:trmnl_forced?, false)}
   end
 
   @impl true
-  def handle_event("refresh", _params, socket) do
-    Dashboard.refresh_now()
-    {:noreply, assign(socket, :refresh_requested?, true)}
+  def handle_params(params, _uri, socket) do
+    {:noreply, assign(socket, :trmnl_forced?, trmnl_forced?(params))}
   end
 
   @impl true
   def handle_info({:dashboard_snapshot, snapshot}, socket) do
-    {:noreply, assign(socket, snapshot: snapshot, refresh_requested?: false)}
+    {:noreply, assign(socket, :snapshot, snapshot)}
   end
 
   @impl true
@@ -45,7 +44,7 @@ defmodule EverydayDashWeb.DashboardLive do
     <Layouts.app
       flash={@flash}
       show_header={false}
-      main_class="dashboard-page mx-auto flex min-h-screen w-full max-w-[92rem] items-center px-6 py-8 sm:px-10 lg:px-12 lg:py-14"
+      main_class={dashboard_main_class(@trmnl_forced?)}
       inner_class="w-full"
     >
       <div id="dashboard-stage" class="dashboard-stage">
@@ -59,12 +58,6 @@ defmodule EverydayDashWeb.DashboardLive do
                 <p class="dashboard-kicker dashboard-header__kicker">
                   Life metrics, refreshed from the source
                 </p>
-                <h1
-                  id="dashboard-page-title"
-                  class="dashboard-title dashboard-header__title text-balance text-5xl leading-none sm:text-6xl"
-                >
-                  One page for the signals that matter every day.
-                </h1>
                 <div
                   id="hero-message-rotator"
                   phx-hook="HeroMessageRotator"
@@ -100,18 +93,9 @@ defmodule EverydayDashWeb.DashboardLive do
                   id="dashboard-status"
                   class="dashboard-header__status-copy text-sm leading-6 text-[color:var(--dashboard-muted)] lg:text-right"
                 >
-                  <p>{snapshot_status(@snapshot, @refresh_requested?)}</p>
+                  <p>{snapshot_status(@snapshot)}</p>
                   <p class="dashboard-header__range">{@snapshot.range_label}</p>
                 </div>
-
-                <button
-                  id="dashboard-refresh-button"
-                  type="button"
-                  phx-click="refresh"
-                  class="dashboard-refresh-button"
-                >
-                  {refresh_label(@snapshot, @refresh_requested?)}
-                </button>
               </div>
             </header>
 
@@ -143,9 +127,9 @@ defmodule EverydayDashWeb.DashboardLive do
     """
   end
 
-  defp snapshot_status(snapshot, refresh_requested?) do
+  defp snapshot_status(snapshot) do
     cond do
-      snapshot.refreshing? or refresh_requested? ->
+      snapshot.refreshing? ->
         "Refreshing data..."
 
       is_nil(snapshot.updated_at) ->
@@ -154,10 +138,6 @@ defmodule EverydayDashWeb.DashboardLive do
       true ->
         "Last updated #{relative_time(snapshot.updated_at)}"
     end
-  end
-
-  defp refresh_label(snapshot, refresh_requested?) do
-    if snapshot.refreshing? or refresh_requested?, do: "Refreshing...", else: "Refresh now"
   end
 
   defp relative_time(updated_at) do
@@ -173,6 +153,25 @@ defmodule EverydayDashWeb.DashboardLive do
   defp hero_messages_json do
     Jason.encode!(@hero_messages)
   end
+
+  defp dashboard_main_class(trmnl_forced?) do
+    [
+      "dashboard-page",
+      trmnl_forced? && "dashboard-page--trmnl",
+      "mx-auto flex min-h-screen w-full max-w-[92rem] items-center px-6 py-8 sm:px-10 lg:px-12 lg:py-14"
+    ]
+    |> Enum.reject(&is_nil/1)
+    |> Enum.join(" ")
+  end
+
+  defp trmnl_forced?(params) do
+    params
+    |> Map.get("trmnl")
+    |> truthy_param?()
+  end
+
+  defp truthy_param?(value) when value in ["1", "true", "yes", "on"], do: true
+  defp truthy_param?(_value), do: false
 
   defp first_hero_message, do: List.first(@hero_messages)
 

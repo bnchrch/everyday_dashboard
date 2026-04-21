@@ -40,13 +40,14 @@ defmodule EverydayDashWeb.DashboardLiveTest do
     assert has_element?(view, "#dashboard-shell")
     assert has_element?(view, "#dashboard-layout")
     assert has_element?(view, "#dashboard-header")
-    assert has_element?(view, "#dashboard-page-title")
     assert has_element?(view, "#hero-message-rotator")
     assert has_element?(view, "#dashboard-status")
-    assert has_element?(view, "#dashboard-refresh-button")
+    refute has_element?(view, "#dashboard-page-title")
+    refute has_element?(view, "#dashboard-refresh-button")
     assert has_element?(view, "#dashboard-primary")
     assert has_element?(view, "#dashboard-metrics-grid")
     assert has_element?(view, "#metric-card-github_commits")
+    assert has_element?(view, "#metric-card-github_commits .metric-card__chart-copy")
     assert has_element?(view, "#metric-card-github_commits .metric-card__description")
     assert has_element?(view, "#metric-card-strava_activities")
     assert has_element?(view, "#dashboard-habitify-rail")
@@ -81,6 +82,12 @@ defmodule EverydayDashWeb.DashboardLiveTest do
     assert has_element?(view, "#habitify-empty-state")
     assert has_element?(view, "#habitify-empty-state .habitify-empty-state__status")
     assert has_element?(view, "#habitify-empty-state code", "HABITIFY_API_KEY")
+  end
+
+  test "supports forcing TRMNL mode with a query param", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/?trmnl=1")
+
+    assert has_element?(view, "main.dashboard-page--trmnl")
   end
 
   test "renders friendly Strava stale copy without setup env pills", %{conn: conn} do
