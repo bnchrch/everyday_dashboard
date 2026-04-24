@@ -12,11 +12,11 @@ defmodule EverydayDash.Dashboard.Loader do
       id: :github_commits,
       label: "GitHub commits",
       description:
-        "Daily commit volume from your GitHub account, displayed as a rolling 7-day average.",
+        "Unique authored commits across your owned repo branches, displayed as a rolling 7-day average.",
       accent: "embers",
       unit: "commits/day",
       source: GitHub,
-      source_label: "GitHub GraphQL",
+      source_label: "Git history",
       setup_envs: ["GITHUB_USERNAME", "GITHUB_TOKEN"]
     },
     %{

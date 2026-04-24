@@ -38,7 +38,9 @@ Required:
 - `GITHUB_USERNAME`
 - `GITHUB_TOKEN`
 
-The app uses GitHub GraphQL to collect commit contributions by day.
+The app uses GitHub GraphQL to walk owned repositories, branch heads, and authored commit history.
+It counts unique commit SHAs across branches, so branch-only work shows up and the same commit is not double-counted if it appears on multiple branches.
+If you want private repo work included, `GITHUB_TOKEN` must be able to read private repositories.
 
 ### Habitify
 
@@ -61,6 +63,7 @@ Optional:
 - `STRAVA_TOKEN_STORE_PATH`
 - `DASHBOARD_REFRESH_MS`
 - `DASHBOARD_GRAPH_DAYS`
+- `TZ` (`America/Vancouver` for Vancouver-local day boundaries)
 
 The Strava refresh token is rotated and the newest token is persisted locally at `tmp/strava_tokens.json` by default so restarts keep working.
 
@@ -126,6 +129,7 @@ gigalixir config:set -a bnchrch-everyday-dashboard \
   STRAVA_CLIENT_SECRET="..." \
   STRAVA_REFRESH_TOKEN="..." \
   DASHBOARD_REFRESH_MS="60000" \
+  TZ="America/Vancouver" \
   PHX_HOST="dash.ben.church" \
   PHX_ADDITIONAL_HOSTS="bnchrch-everyday-dashboard.gigalixirapp.com"
 ```
@@ -139,6 +143,7 @@ gigalixir config:unset -a bnchrch-everyday-dashboard KEY_NAME
 Important production notes:
 
 - `DATABASE_URL`, `PORT`, and `SECRET_KEY_BASE` are provided by Gigalixir and generally should not be edited manually.
+- `TZ=America/Vancouver` keeps the dashboard's "today" bucket aligned with Vancouver time instead of UTC.
 - Strava refresh tokens rotate, so production should keep using the database-backed token store. If `DATABASE_URL` is present, the app automatically uses `STRAVA_TOKEN_STORE_BACKEND=database`.
 - If you change the custom domain, update both DNS and the Phoenix host env vars together.
 
@@ -174,7 +179,8 @@ gigalixir ps:migrate -a bnchrch-everyday-dashboard
 
 ## Notes
 
-- GitHub data is pulled from `commitContributionsByRepository`, so the card reflects commit counts rather than all contribution types.
+- GitHub data is pulled from authored commit history across owned repo branch heads, with duplicate SHAs counted once globally.
+- Private repo work only appears when `GITHUB_TOKEN` can read private repositories.
 - Habitify completion is derived from logged values, not the `status` endpoint, because logs were the reliable source for completed daily reps in this account.
 - Strava data counts activities by day using `start_date_local`.
 - The refresh worker keeps the last successful snapshot in memory and reuses it if one source errors.

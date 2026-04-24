@@ -105,7 +105,7 @@ defmodule EverydayDashWeb.DashboardLiveTest do
       |> Map.put(:updated_at, ~U[2026-03-09 12:00:00Z])
       |> Map.put(:metrics, [
         stale_strava_metric(),
-        fallback_metric(:github_commits, "Work")
+        fallback_metric(:github_commits, "Git history")
       ])
 
     send(view.pid, {:dashboard_snapshot, snapshot})
